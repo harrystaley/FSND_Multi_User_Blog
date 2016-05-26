@@ -9,6 +9,10 @@ handlers:
   static_files: favicon.ico
   upload: favicon\.ico
 
+# - url: /shopping_list\.html
+#   static_files: shopping_list.html
+#   upload: shopping_list\.html
+
 - url: .*
   script: main.app
 
