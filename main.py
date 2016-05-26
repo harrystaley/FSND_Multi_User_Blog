@@ -40,7 +40,8 @@ class MainPage(Handler):
         """
         Passes markup from defined file and passes it to the renderer.
         """
-        self.render("shopping_list.html")
+        items = self.request.get_all("food")
+        self.render("shopping_list.html", items = items)
 
 # Called in app.yaml as an atribute of this
 # file so that template can be rendered
