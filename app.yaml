@@ -9,10 +9,9 @@ handlers:
   static_files: favicon.ico
   upload: favicon\.ico
 
-# - url: /shopping_list\.html
-#   static_files: shopping_list.html
-#   upload: shopping_list\.html
-
+#  Defines how the app will be
+#  interepreted using the "app" variable
+#  defined at the end of the main file.
 - url: .*
   script: main.app
 

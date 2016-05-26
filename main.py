@@ -2,8 +2,10 @@ import os
 import jinja2
 import webapp2
 
-template_dir = os.path.join(os.path.dirname(__file__), 'templates')
-jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir))
+# sets the locaiton of the templates folder contained in the home of this file.
+TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), 'templates')
+# envokes the jinja2 envronment pointing it to the location of the templates.
+JINJA_ENV = jinja2.Environment(loader=jinja2.FileSystemLoader(TEMPLATE_DIR))
 
 
 class Handler(webapp2.RequestHandler):
@@ -12,15 +14,15 @@ class Handler(webapp2.RequestHandler):
     """
     def write(self, *a, **kw):
         """
-        Prints out the response to al functions.
+        displays the respective function, parameters, ect.
         """
         self.response.out.write(*a, **kw)
 
     def render_str(self, template, **params):
         """
-        Gets the template string and renders it with paramanters.
+        Gets the template string and passes it with paramanters.
         """
-        tmp = jinja_env.get_template(template)
+        tmp = JINJA_ENV.get_template(template)
         return tmp.render(params)
 
     def render(self, template, **kw):
@@ -40,7 +42,8 @@ class MainPage(Handler):
         """
         self.render("shopping_list.html")
 
-
+# Called in app.yaml as an atribute of this
+# file so that template can be rendered
 app = webapp2.WSGIApplication([
     ('/', MainPage)
 ], debug=True)
