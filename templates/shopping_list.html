@@ -3,10 +3,24 @@
 	<input type="text" name="food">
 	<button>Add</button>
 
-	<!-- jinja2 logic for adding hidden items to our list -->
+	<!-- Begin jinja2 logic for adding hidden items to our list -->
 	{% if items%}
 		{% for item in items %}
 			<input type="hidden" name="food" value="{{item}}">
 		{% endfor %}
 	{% endif %}
+
+	{% if items %}
+		<br>
+		<br>
+
+		<h2>Shopping List</h2>
+		<ul>
+		{%for item in items %}
+			<li>{{item}}</li>
+		{% endfor %}
+		</ul>
+	{% endif %}
+	<!-- End jinja2 logic -->
+
 </form>

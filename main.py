@@ -40,8 +40,10 @@ class MainPage(Handler):
         """
         Passes markup from defined file and passes it to the renderer.
         """
+        # variable to store food input from HTTP GET
         items = self.request.get_all("food")
-        self.render("shopping_list.html", items = items)
+        # pases the value in item variable into the jinja2 template
+        self.render("shopping_list.html", items=items)
 
 # Called in app.yaml as an atribute of this
 # file so that template can be rendered
