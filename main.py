@@ -40,21 +40,24 @@ class MainPage(Handler):
         """
         Passes markup from defined file and passes it to the renderer.
         """
-        # variable to store food input from HTTP GET
         items = self.request.get_all("food")
         # pases the value in item variable into the jinja2 template
         self.render("shopping_list.html", items=items)
 
+
 class FizzBuzzHandler(Handler):
-    """ Class to handle FizzBuzz template """capitalize
-    def get(self)
+    """ Class to handle FizzBuzz template """
+    def get(self):
         n = self.request.get('n', 0)
         n = n and int(n)
 
 
-# Called in app.yaml as an atribute of thisfile so that template can be
-# rendered
+"""
+Called in app.yaml as an atribute of thisfile so that template can be
+rendered. this also tells what url should be used for each of the
+template classes.
+"""
 app = webapp2.WSGIApplication([
     ('/', MainPage),
-    ('/fizzbuzz', FizzBuzzHanlder)
+    ('/fizzbuzz', FizzBuzzHandler)
 ], debug=True)
