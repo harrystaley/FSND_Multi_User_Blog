@@ -1,0 +1,25 @@
+<!-- JINJA2 TEMPLATE EXTENSION -->
+{% extends "base.html" %}
+
+{% block content %}
+
+<ol>
+<!-- Begin Jinja2 Template Logic -->
+{% for x in range(1, n+1) %}
+	<li>
+	{% if n % 15 == 0 %}
+		FizzBuzz
+	{% elif n % 3 == 0 %}
+		Fizz
+	{% elif n % 5 == 0 %}
+		Buzz
+	{% else %}
+		{{ x }}
+	{% endif %}
+	</li>
+{% endfor %}
+<!-- End Jinja2 Template Logic -->
+
+</ol>
+
+{% endblock %}
