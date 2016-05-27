@@ -1,0 +1,55 @@
+/* Created by Harry Staley for Project 1 of the Udacity Front End Web Devlopment Nanodegree */
+
+body {
+	padding-top: 70px;
+	background-color: #294860;
+	color: white;
+	font-family: "Ubuntu", sans-serif;
+}
+
+.btn-default {
+	background-color: #294860;
+	min-width: 48px;
+	min-height: 48px;
+	-webkit-border-radius: 10%;
+  	-moz-border-radius: 10%;
+  	border-radius: 10%;
+}
+
+.modal-header {
+	color: #294860;
+	background-color: #f8981c;
+}
+
+.modal-body {
+	color: #000;
+}
+
+.logo {
+	width: 20%;
+}
+
+.social-media {
+	padding: 10px;
+	background-color: #f8981c;
+	display: block;
+	min-height: 48px;
+	min-width: 48px;
+}
+
+.portfolioImg {
+	height: 300px;
+	width: 300px;
+}
+
+.picture {
+	display: block;
+	margin: 0 auto 10px;
+	max-width: 100%;
+	min-width: 48px;
+	min-height: 48px;
+  	border: 2px solid white;
+  	-webkit-border-radius: 2.5%;
+  	-moz-border-radius: 2.5%;
+  	border-radius: 2.5%;
+}
