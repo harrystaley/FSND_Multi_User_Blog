@@ -45,8 +45,16 @@ class MainPage(Handler):
         # pases the value in item variable into the jinja2 template
         self.render("shopping_list.html", items=items)
 
+class FizzBuzzHandler(Handler):
+    """ Class to handle FizzBuzz template """capitalize
+    def get(self)
+        n = self.request.get('n', 0)
+        n = n and int(n)
+
+
 # Called in app.yaml as an atribute of thisfile so that template can be
 # rendered
 app = webapp2.WSGIApplication([
-    ('/', MainPage)
+    ('/', MainPage),
+    ('/fizzbuzz', FizzBuzzHanlder)
 ], debug=True)
