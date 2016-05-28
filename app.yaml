@@ -9,12 +9,6 @@ handlers:
   static_files: favicon.ico
   upload: favicon\.ico
 
-#  Defines how the app will be
-#  interepreted using the "app" variable
-#  defined at the end of the main file.
-- url: .*
-  script: main.app
-
 - url: /css
   static_dir: css
 
@@ -23,6 +17,12 @@ handlers:
 
 - url: /images
   static_dir: images
+
+#  Defines how the app will be
+#  interepreted using the "app" variable
+#  defined at the end of the main file.
+- url: .*
+  script: main.app
 
 libraries:
 - name: webapp2

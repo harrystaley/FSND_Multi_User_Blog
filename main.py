@@ -1,12 +1,6 @@
 import os
 import jinja2
 import webapp2
-import string
-import sys
-
-# sets the default encoding to utf8
-reload(sys)
-sys.setdefaultencoding('utf8')
 
 # sets the locaiton of the templates folder contained in the home of this file.
 TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), 'templates')
@@ -75,9 +69,11 @@ class Rot13Handler(Handler):
 
 class UserSignup(Handler):
     """ This is the hander class for the user sign up page """
+    def get(self):
+        self.render("signup.html")
+
     def post(self):
         """ This function handles the post request from the signup page """
-
         self.render("signup.html")
 
 
