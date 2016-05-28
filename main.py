@@ -62,12 +62,15 @@ class Rot13Handler(Handler):
 
     def post(self):
         """ This function handles the post request from the web page """
-        text = self.request.get("text")
-        rot13 = string.maketrans(
-            "ABCDEFGHIJKLMabcdefghijklmNOPQRSTUVWXYZnopqrstuvwxyz",
-            "NOPQRSTUVWXYZnopqrstuvwxyzABCDEFGHIJKLMabcdefghijklm")
-        new_text = string.translate(text, rot13)
-        self.render("rot13.html", text=new_text)
+        old_text = self.request.get("text")
+        # THe input table for the rot13 variable
+        intab = "ABCDEFGHIJKLMabcdefghijklmNOPQRSTUVWXYZnopqrstuvwxyz"
+        # The output table for the rot13 variable
+        outtab = "NOPQRSTUVWXYZnopqrstuvwxyzABCDEFGHIJKLMabcdefghijklm"
+        # This variable executes the translation between the strings
+        rot13 = string.maketrans(intab, outtab)
+        cyphertext = string.translate(old_text, rot13)
+        self.render("rot13.html", text=cyphertext)
 
 
 """
