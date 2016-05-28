@@ -73,13 +73,17 @@ class Rot13Handler(Handler):
         self.render("rot13.html", text=cyphertext)
 
 
-"""
-Called in app.yaml as an atribute of thisfile so that template can be
-rendered. this also tells what url should be used for each of the
-template classes.
-"""
+class UserSignup(Handler):
+    """ This is the hander class for the user sign up page """
+    def post(self):
+        """ This function handles the post request from the signup page """
+
+        self.render("signup.html")
+
+
 app = webapp2.WSGIApplication([
     ('/', MainPage),
     ('/fizzbuzz', FizzBuzzHandler),
-    ('/rot13', Rot13Handler)
+    ('/rot13', Rot13Handler),
+    ('/signup', UserSignup)
 ], debug=True)

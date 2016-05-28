@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-  <!-- Created by Harry Staley for Project 1 of the Udacity Front End Web Devlopment Nanodegree-->
+  <!-- Created by Harry Staley for the multi-user blog project in the full stack web developer nanodegree -->
   <!-- Images were used freely from http://www.freeimages.com or from their respective style guides at Udacity.com and Linkedin.com -->
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css">
 
   <!-- custom stylesheet -->
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="/css/style.css">
 
   <!-- stylesheet for a google font. -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Ubuntu:400,500,700">
@@ -21,9 +21,65 @@
 
 <body>
 
-<!-- JINJA2 INHERITANCE FOR CHILD TEMPLATES -->
-{% block content %}
-{% endblock %}
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#Navbar">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#main">home</a>
+      </div>
+      <div class="collapse navbar-collapse" id="Navbar">
+
+        <ul class="nav navbar-nav">
+          <li><a href="#portfolio">Online Portfolio</a>
+          </li>
+          <li><a href="#resume">Online Resume</a>
+          </li>
+          <li><a href="#videogame">Classic Video Game Clone</a>
+          </li>
+          <li><a href="#project4">Project 4</a>
+          </li>
+        </ul>
+
+      </div>
+    </div>
+  </nav>
+
+  <div id="main" class="container">
+    <header>
+      <div class="row">
+        <div class="col-md-6">
+          <a href="https://www.udacity.com/"><img class="img-responsive logo" src="images/udacity_logo.svg" srcset="images/udacity_logo.svg" alt="Udacity Logo">
+          </a>
+        </div>
+        <div class="col-md-6 text-right text-uppercase">
+          <h1>Harry Staley</h1>
+          <h3>Web Developer and Data Analyst</h3>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <div class="row">
+        <div class="col-md-12">
+          <!-- JINJA2 INHERITANCE FOR CHILD TEMPLATES -->
+          {% block content %}
+          {% endblock %}
+        </div>
+      </div>
+    </main>
+
+    <footer class="social-media">
+      <div class="row">
+        <div class="col-md-12">
+          <a href="https://www.linkedin.com/in/harrystaley"><img class="img-responsive" src="images/In-2C-48px-R.png" alt="Go to my LinkedIn profile.">
+          </a>
+        </div>
+      </div>
+    </footer>
 
 <!-- JAVASCRIPT CALLS -->
 
