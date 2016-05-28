@@ -2,6 +2,11 @@ import os
 import jinja2
 import webapp2
 import string
+import sys
+
+# sets the default encoding to utf8
+reload(sys)
+sys.setdefaultencoding('utf8')
 
 # sets the locaiton of the templates folder contained in the home of this file.
 TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), 'templates')
@@ -62,14 +67,9 @@ class Rot13Handler(Handler):
 
     def post(self):
         """ This function handles the post request from the web page """
-        old_text = self.request.get("text")
-        # THe input table for the rot13 variable
-        intab = "ABCDEFGHIJKLMabcdefghijklmNOPQRSTUVWXYZnopqrstuvwxyz"
-        # The output table for the rot13 variable
-        outtab = "NOPQRSTUVWXYZnopqrstuvwxyzABCDEFGHIJKLMabcdefghijklm"
-        # This variable executes the translation between the strings
-        rot13 = string.maketrans(intab, outtab)
-        cyphertext = string.translate(old_text, rot13)
+        text = self.request.get("text")
+        # encodes cyphertext encoding using rot13
+        cyphertext = text.encode('rot13')
         self.render("rot13.html", text=cyphertext)
 
 
