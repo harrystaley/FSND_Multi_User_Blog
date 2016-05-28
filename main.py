@@ -1,6 +1,7 @@
 import os
 import jinja2
 import webapp2
+import string
 
 # sets the locaiton of the templates folder contained in the home of this file.
 TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), 'templates')
@@ -53,6 +54,22 @@ class FizzBuzzHandler(Handler):
         self.render("fizzbuzz.html", n=n)
 
 
+class Rot13Handler(Handler):
+    """ Class to handle the Rot13 template """
+
+    def get(self):
+        self.render("rot13.html")
+
+    def post(self):
+        """ This function handles the post request from the web page """
+        text = self.request.get("text")
+        rot13 = string.maketrans(
+            "ABCDEFGHIJKLMabcdefghijklmNOPQRSTUVWXYZnopqrstuvwxyz",
+            "NOPQRSTUVWXYZnopqrstuvwxyzABCDEFGHIJKLMabcdefghijklm")
+        new_text = string.translate(text, rot13)
+        self.render("rot13.html", text=new_text)
+
+
 """
 Called in app.yaml as an atribute of thisfile so that template can be
 rendered. this also tells what url should be used for each of the
@@ -60,5 +77,6 @@ template classes.
 """
 app = webapp2.WSGIApplication([
     ('/', MainPage),
-    ('/fizzbuzz', FizzBuzzHandler)
+    ('/fizzbuzz', FizzBuzzHandler),
+    ('/rot13', Rot13Handler)
 ], debug=True)

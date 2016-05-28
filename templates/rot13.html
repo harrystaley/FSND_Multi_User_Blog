@@ -1,0 +1,18 @@
+<!-- JINJA2 TEMPLATE EXTENSION -->
+{% extends "base.html" %}
+
+<!-- THIS IS NOT A DEPENDENCY FOR THE MULTI USER BLOG
+This template is a part of the forms and templates portion
+of the intro to backend course in preparation for the multi-user
+blog project -->
+
+{% block content %}
+
+<form method="post">
+	<h2>Enter text to ROT13:</h2>
+	<textarea rows="4" cols="50" name="text" >{{text}}</textarea>
+	<br>
+	<input type="Submit">
+</form>
+
+{% endblock %}
