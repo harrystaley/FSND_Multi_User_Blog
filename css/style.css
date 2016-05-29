@@ -7,6 +7,12 @@ body {
 	font-family: "Ubuntu", sans-serif;
 }
 
+input {
+	min-width: 48px;
+	min-height: 48px;
+	color: black;
+}
+
 .btn-default {
 	background-color: #294860;
 	min-width: 48px;

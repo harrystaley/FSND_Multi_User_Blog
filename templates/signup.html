@@ -8,9 +8,25 @@ blog project -->
 
 {% block content %}
 
-<form>
-	<h2>Sign Up</h2>
-
+<h2>Sign Up</h2>
+<form method="post">
+	<label>
+		User ID
+		<input type="text" name="UserId">
+	</label>
+	<label>
+		Password
+		<input type="password" name="Password1">
+	</label>
+	<label>
+		Re-type Password
+		<input type="password" name="Password2">
+	</label>
+	<label>
+		Email
+		<input type="email" name="email">
+	</label>
+	<input type="submit" class="btn-default">
 </form>
 
 {% endblock %}
