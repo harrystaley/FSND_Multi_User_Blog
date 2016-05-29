@@ -1,16 +1,38 @@
-/* Created by Harry Staley for Project 1 of the Udacity Front End Web Devlopment Nanodegree */
+/* Created by Harry Staley for the multi user blog project of the Udacity full stack Web Devlopment Nanodegree */
 
-body {
+body, legend {
 	padding-top: 70px;
 	background-color: #294860;
 	color: white;
 	font-family: "Ubuntu", sans-serif;
 }
 
+fieldset {
+	width: 500px;
+}
+
+fieldset p {
+	clear: both;
+	padding: 5px;
+}
+
 input {
 	min-width: 48px;
 	min-height: 48px;
 	color: black;
+}
+
+input.text{
+	width: 300px;
+	float: right;
+}
+
+label {
+	text-align: right;
+	width: 100px;
+	padding: 5px;
+	float: left;
+	font-weight: bold;
 }
 
 .btn-default {
