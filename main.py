@@ -20,7 +20,7 @@ def valid_userid(userId):
     return userId and USER_RE.match(userId)
 
 
-def valid_password(password1):
+def valid_password(password):
     """ validates the password input by passing it through regex """
     return password and PASS_RE.match(password)
 
@@ -145,10 +145,10 @@ class Welcome(Handler):
     """ This is the handler class for the welcome page """
     def get(self):
         """ handles the GET request for the welcome paage """
-        userId = self.request.get('userId')
+        userName = self.request.get('userId')
         # If userId is valid render the welcome page.
-        if valid_userid(userId):
-            self.render("welcome.html", userId=userId)
+        if valid_userid(userName):
+            self.render("welcome.html", userId=userName)
 
 
 app = webapp2.WSGIApplication([
@@ -156,5 +156,5 @@ app = webapp2.WSGIApplication([
     ('/fizzbuzz', FizzBuzzHandler),
     ('/rot13', Rot13Handler),
     ('/signup', UserSignup),
-    ('/wecome', Welcome)
+    ('/welcome', Welcome)
 ], debug=True)
