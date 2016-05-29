@@ -15,9 +15,9 @@ PASS_RE = re.compile("^.{3,20}$")
 EMAIL_RE = re.compile("^[\S]+@[\S]+.[\S]+$")
 
 
-def valid_userid(userId):
+def valid_user_id(user_id):
     """ validates the user id input by passing it through regex """
-    return userId and USER_RE.match(userId)
+    return user_id and USER_RE.match(user_id)
 
 
 def valid_password(password):
@@ -72,9 +72,9 @@ class FizzBuzzHandler(Handler):
 
     def get(self):
         """ uses GET request to render the main page and get the value of n """
-        n = self.request.get('n', 0)
-        n = n and int(n)
-        self.render("fizzbuzz.html", n=n)
+        count = self.request.get('n', 0)
+        count = count and int(count)
+        self.render("fizzbuzz.html", n=count)
 
 
 class Rot13Handler(Handler):
@@ -105,53 +105,53 @@ class UserSignup(Handler):
 
     def post(self):
         """ handles the POST request from the signup page """
-        haveError = False
+        have_error = False
         # GET requests for user input from signup page
-        userId = self.request.get('userId')
-        password1 = self.request.get('password1')
-        password2 = self.request.get('password2')
+        user_id = self.request.get('user_id')
+        password_1 = self.request.get('password_1')
+        password_2 = self.request.get('password_2')
         email = self.request.get('email')
 
-        # dictionary to store error messages and userId and email if not valid
-        params = dict(userId=userId, email=email)
+        # dictionary to store error messages and user_id and email if not valid
+        params = dict(user_id=user_id, email=email)
 
-        # tests for valid userid
-        if not valid_userid(userId):
-            params['errorUserId'] = 'Invalid User ID'
-            haveError = True
+        # tests for valid user_id
+        if not valid_user_id(user_id):
+            params['erroruser_id'] = 'Invalid User ID'
+            have_error = True
 
         # tests for valid password and password match
-        if not valid_password(password1):
-            params['errorPassword1'] = 'Invalid Password'
-            haveError = True
-        elif password1 != password2:
-            params['errorPassword2'] = 'Passwords do not Match'
-            haveError = True
+        if not valid_password(password_1):
+            params['errorpassword_1'] = 'Invalid Password'
+            have_error = True
+        elif password_1 != password_2:
+            params['errorpassword_2'] = 'Passwords do not Match'
+            have_error = True
 
         # tests for valid email
         if not valid_email(email):
             params['errorEmail'] = 'Invalid Email'
-            haveError = True
+            have_error = True
 
         # if there is an error re-render signup page
         # else render the welcome page
-        if haveError:
+        if have_error:
             self.render("signup.html", **params)
         else:
-            self.redirect('/welcome?userId=' + userId)
+            self.redirect('/welcome?user_id=' + user_id)
 
 
 class Welcome(Handler):
     """ This is the handler class for the welcome page """
     def get(self):
         """ handles the GET request for the welcome paage """
-        userName = self.request.get('userId')
-        # If userId is valid render the welcome page.
-        if valid_userid(userName):
-            self.render("welcome.html", userId=userName)
+        user_name = self.request.get('user_id')
+        # If user_id is valid render the welcome page.
+        if valid_user_id(user_name):
+            self.render("welcome.html", user_id=user_name)
 
 
-app = webapp2.WSGIApplication([
+WSGI_APP = webapp2.WSGIApplication([
     ('/', MainPage),
     ('/fizzbuzz', FizzBuzzHandler),
     ('/rot13', Rot13Handler),

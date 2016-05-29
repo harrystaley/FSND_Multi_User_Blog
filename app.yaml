@@ -19,10 +19,10 @@ handlers:
   static_dir: images
 
 #  Defines how the app will be
-#  interepreted using the "app" variable
+#  interepreted using the "WSGI_APP" constant
 #  defined at the end of the main file.
 - url: .*
-  script: main.app
+  script: main.WSGI_APP
 
 libraries:
 - name: webapp2
