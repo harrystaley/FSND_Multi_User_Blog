@@ -117,20 +117,20 @@ class UserSignup(Handler):
 
         # tests for valid user_id
         if not valid_user_id(user_id):
-            params['erroruser_id'] = 'Invalid User ID'
+            params['error_user_id'] = 'Invalid User ID'
             have_error = True
 
         # tests for valid password and password match
         if not valid_password(password_1):
-            params['errorpassword_1'] = 'Invalid Password'
+            params['error_password_1'] = 'Invalid Password'
             have_error = True
         elif password_1 != password_2:
-            params['errorpassword_2'] = 'Passwords do not Match'
+            params['error_password_2'] = 'Passwords do not Match'
             have_error = True
 
         # tests for valid email
         if not valid_email(email):
-            params['errorEmail'] = 'Invalid Email'
+            params['error_email'] = 'Invalid Email'
             have_error = True
 
         # if there is an error re-render signup page

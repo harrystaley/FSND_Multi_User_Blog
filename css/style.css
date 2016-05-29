@@ -35,6 +35,7 @@ label {
 	font-weight: bold;
 }
 
+
 .btn-default {
 	background-color: #294860;
 	min-width: 48px;
@@ -42,6 +43,10 @@ label {
 	-webkit-border-radius: 10%;
   	-moz-border-radius: 10%;
   	border-radius: 10%;
+}
+
+.error {
+	padding: 5px;
 }
 
 .modal-header {
