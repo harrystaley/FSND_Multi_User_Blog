@@ -8,17 +8,19 @@ blog project -->
 
 {% block content %}
 
+<!-- TODO: Add more detailed user guidance as to what is expected for passwordsm ect -->
+
 <form action="" method="post" id="SignUpForm">
 	<fieldset class="accountInfo">
 		<legend>New User Sign Up</legend>
 		<p><label for="UserId">User ID</label>
-			<input type="text" name="UserId" placeholder="Required" required>
+			<input type="text" name="userId" value="{{userId}}" placeholder="Required" required><span class="error">{{errorUserId}}</span>
 		<p><label for="Password1">Password</label>
-			<input type="password" name="Password1" placeholder="Required" required>
+			<input type="password" name="password1" value="" placeholder="Required" required><span class="error">{{errorPassword1}}</span>
 		<p><label for="Password2">Re-type Password</label>
-			<input type="password" name="Password2" placeholder="Required" required>
+			<input type="password" name="password2" value="" placeholder="Required" required><span class="error">{{errorPassword2}}</span>
 		<p><label for="email">Email</label>
-			<input type="email" name="email" placeholder="you@youremail.com">
+			<input type="email" name="email" value="{{email}}" placeholder="you@youremail.com"><span class="error">{{errorEmail}}</span>
 	</fieldset>
 	<fieldset class="accountAction">
 		<input type="submit" class="btn btn-default" name="submit" value="Sign Up">
