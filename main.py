@@ -1,7 +1,16 @@
 import os
+# import jinja2 lib
 import jinja2
-import webapp2
+# import regex lib
 import re
+import webapp2
+
+# import google app engine data store lib
+from google.appengine.ext import db
+
+__author__ = "Harry Staley <staleyh@gmail.com>"
+__version__ = "1.0"
+
 
 # sets the locaiton of the templates folder contained in the home of this file.
 TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), 'templates')
@@ -52,7 +61,7 @@ class Handler(webapp2.RequestHandler):
         self.write(self.render_str(template, **kw))
 
 
-class MainPage(Handler):
+class ShoppintListHandler(Handler):
     """
     Takes input from Handler and renders the markup
     defined.
@@ -77,26 +86,45 @@ class FizzBuzzHandler(Handler):
         self.render("fizzbuzz.html", n=count)
 
 
-class Rot13Handler(Handler):
-    """ Class to handle the Rot13 template """
+class DbPostHandler(db.Model):
+    """ This is the handler class for the new blog post datastore """
+    db_post_title = db.StringProperty(required=True)
+    db_post_content = db.TextProperty(required=True)
+    db_post_created = db.DateTimeProperty(auto_now_add=True)
+
+
+class NewPostHandler(Handler):
+    """ This is the new handler class for the new blog post page """
+    def render_new_post(self, post_title="", post_content="", post_error=""):
+        self.render("newpost.html", post_title=post_title,
+                    post_content=post_content,
+                    post_error=post_error)
 
     def get(self):
-        """ uses GET request to render the rot13 page """
-
-        self.render("rot13.html")
+        """
+        uses GET request to render the new
+        post page from render_new_post
+        """
+        self.render_new_post()
 
     def post(self):
-        """ This function handles the post request from the web page """
+        """
+        handles the POST request
+        from the new post page
+        """
+        post_title = self.request.get('post_title')
+        post_content = self.request.get('post_content')
 
-        # GET request for user input from ROT13 page
-        text = self.request.get("text")
-        # encodes cyphertext using rot13 ceasar cypher
-        cyphertext = text.encode('rot13')
-        # re-renders the page passing in cyphertext
-        self.render("rot13.html", text=cyphertext)
+        if post_title and post_content:
+            cursor = DbPostHandler(db_post_title=post_title,
+                                   db_post_content=post_content)
+            cursor.put()
+            self.redirect("/")
+        else:
+            post_error = "Please submit both the title and the post content. "
 
 
-class UserSignup(Handler):
+class UserSignupHandler(Handler):
     """ This is the hander class for the user sign up page """
 
     def get(self):
@@ -141,7 +169,7 @@ class UserSignup(Handler):
             self.redirect('/welcome?user_id=' + user_id)
 
 
-class Welcome(Handler):
+class WelcomeHandler(Handler):
     """ This is the handler class for the welcome page """
     def get(self):
         """ handles the GET request for the welcome paage """
@@ -152,9 +180,9 @@ class Welcome(Handler):
 
 
 WSGI_APP = webapp2.WSGIApplication([
-    ('/', MainPage),
+    ('/', ShoppintListHandler),
     ('/fizzbuzz', FizzBuzzHandler),
-    ('/rot13', Rot13Handler),
-    ('/signup', UserSignup),
-    ('/welcome', Welcome)
+    ('/newpost', NewPostHandler),
+    ('/signup', UserSignupHandler),
+    ('/welcome', WelcomeHandler)
 ], debug=True)
