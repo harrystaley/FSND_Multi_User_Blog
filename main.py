@@ -107,6 +107,9 @@ class NewPostHandler(Handler):
             self.redirect("/")
         else:
             post_error = "Please submit both the title and the post content. "
+            self.render("newpost.html", subject=post_subject,
+                        content=post_content,
+                        error=post_error)
 
 
 class UserSignupHandler(Handler):
