@@ -61,19 +61,6 @@ class Handler(webapp2.RequestHandler):
         self.write(self.render_str(template, **kw))
 
 
-class ShoppintListHandler(Handler):
-    """
-    Takes input from Handler and renders the markup
-    defined.
-    """
-
-    def get(self):
-        """
-        Passes markup from defined file and passes it to the renderer.
-        """
-        items = self.request.get_all("food")
-        # pases the value in item variable into the jinja2 template
-        self.render("shopping_list.html", items=items)
 
 
 class FizzBuzzHandler(Handler):
