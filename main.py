@@ -71,6 +71,7 @@ class DbPostHandler(db.Model):
 class NewPostHandler(Handler):
     """ This is the new handler class for the new blog post page """
     def render_new_post(self, post_title="", post_content="", post_error=""):
+        """ handles rendering new posts if there is an error """
         self.render("newpost.html", post_title=post_title,
                     post_content=post_content,
                     post_error=post_error)
