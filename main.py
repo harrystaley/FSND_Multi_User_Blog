@@ -61,18 +61,6 @@ class Handler(webapp2.RequestHandler):
         self.write(self.render_str(template, **kw))
 
 
-
-
-class FizzBuzzHandler(Handler):
-    """ Class to handle FizzBuzz template """
-
-    def get(self):
-        """ uses GET request to render the main page and get the value of n """
-        count = self.request.get('n', 0)
-        count = count and int(count)
-        self.render("fizzbuzz.html", n=count)
-
-
 class DbPostHandler(db.Model):
     """ This is the handler class for the new blog post datastore """
     db_post_title = db.StringProperty(required=True)
@@ -167,7 +155,6 @@ class WelcomeHandler(Handler):
 
 
 WSGI_APP = webapp2.WSGIApplication([
-    ('/', ShoppintListHandler),
     ('/fizzbuzz', FizzBuzzHandler),
     ('/newpost', NewPostHandler),
     ('/signup', UserSignupHandler),
