@@ -39,6 +39,10 @@ def valid_email(email):
     return not email or EMAIL_RE.match(email)
 
 
+def blog_name(name='default'):
+    return db.key.from_path('blogs', name)
+
+
 class Handler(webapp2.RequestHandler):
     """
     Handler class for all functions in this app for rendering
@@ -61,20 +65,25 @@ class Handler(webapp2.RequestHandler):
         self.write(self.render_str(template, **kw))
 
 
-class DbPostHandler(db.Model):
+class DbPostHandler(db.Model, Handler):
     """ This is the handler class for the new blog post datastore """
-    db_post_title = db.StringProperty(required=True)
+    db_post_subject = db.StringProperty(required=True)
     db_post_content = db.TextProperty(required=True)
     db_post_created = db.DateTimeProperty(auto_now_add=True)
+    db_post_modified = db.DateTimeProperty(auto_now=True)
+
+    def render_post(self):
+        self._render_text = self.content.replace('\n', '<br>')
+        return self.render("post.html", post=self)
 
 
 class NewPostHandler(Handler):
     """ This is the new handler class for the new blog post page """
-    def render_new_post(self, post_title="", post_content="", post_error=""):
-        """ handles rendering new posts if there is an error """
-        self.render("newpost.html", post_title=post_title,
-                    post_content=post_content,
-                    post_error=post_error)
+    def render_new_post(self, post_subject="", post_content="", post_error=""):
+        """ handles rendering new posts if there is an """
+        self.render("newpost.html", subject=post_subject,
+                    content=post_content,
+                    error=post_error)
 
     def get(self):
         """
@@ -88,11 +97,11 @@ class NewPostHandler(Handler):
         handles the POST request
         from the new post page
         """
-        post_title = self.request.get('post_title')
-        post_content = self.request.get('post_content')
+        post_subject = self.request.get('subject')
+        post_content = self.request.get('content')
 
-        if post_title and post_content:
-            cursor = DbPostHandler(db_post_title=post_title,
+        if post_subject and post_content:
+            cursor = DbPostHandler(db_post_subject=post_subject,
                                    db_post_content=post_content)
             cursor.put()
             self.redirect("/")
@@ -156,7 +165,6 @@ class WelcomeHandler(Handler):
 
 
 WSGI_APP = webapp2.WSGIApplication([
-    ('/fizzbuzz', FizzBuzzHandler),
     ('/newpost', NewPostHandler),
     ('/signup', UserSignupHandler),
     ('/welcome', WelcomeHandler)
