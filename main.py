@@ -43,12 +43,18 @@ def valid_email(email):
     return not email or EMAIL_RE.match(email)
 
 
-def blog_key(name='default'):
-    """
-    This is the key that defines a single blog and facilitiate multiple
-    blogs on the same site.
-    """
-    return db.key.from_path('blogs', name)
+def render_post(response, post):
+        response.out.write('<b>' + BlogDb.db_subject + '</b><br>')
+        response.out.write(BlogDb.db_content)
+
+
+# COMMENTED OUT TO TEST WITHOUT BLOGKEY
+# def blog_key(name='default'):
+#     """
+#     This is the key that defines a single blog and facilitiate multiple
+#     blogs on the same site.
+#     """
+#     return db.key.from_path('blogs', name)
 
 
 # CLASS DEFINITIONS
@@ -75,24 +81,24 @@ class Handler(webapp2.RequestHandler):
         self.write(self.render_str(template, **kw))
 
 
-class DbHandler(db.Model):
+class BlogDb(Handler, db.Model):
     """
     This is the handler class for the new blog post datastore.
     This class both instantuates and defines the datastore
     with the exception of blog_key.
     """
-    db_post_subject = db.StringProperty(required=True)
-    db_post_content = db.TextProperty(required=True)
-    db_post_created = db.DateTimeProperty(auto_now_add=True)
-    db_post_modified = db.DateTimeProperty(auto_now=True)
+    db_subject = db.StringProperty(required=True)
+    db_content = db.TextProperty(required=True)
+    db_created = db.DateTimeProperty(auto_now_add=True)
+    db_modified = db.DateTimeProperty(auto_now=True)
 
-    def render_post(self):
+    def render(self):
         """
         Renders the blog post replacing cariage returns in the text with
         html so that it displays correctly in the borowser.
         """
-        self._render_text = self.content.replace('\n', '<br>')
-        return self.render("post.html", db_post=self)
+        self._render_text = self.db_content.replace('\n', '<br>')
+        return render_str("post.html", db_post=self)
 
 
 class MainPage(Handler):
@@ -103,8 +109,8 @@ class MainPage(Handler):
         queries the database for the 10 most recent
         blog posts and orders them descending
         """
-        db_posts = db.GqlQuery("select * from DbHandler " +
-                               "order by created desc limit 10")
+        db_posts = db.GqlQuery("select * from BlogDb " +
+                               "order by post_created desc limit 10")
         self.render('front.html', db_posts=db_posts)
 
 
@@ -125,9 +131,12 @@ class NewPostHandler(Handler):
         post_content = self.request.get('content')
 
         if post_subject and post_content:
-            db_post = DbHandler(parent=blog_key(),
-                                db_post_subject=post_subject,
-                                db_post_content=post_content)
+            # COMMENTED OUT TO TEST WITHOUT BLOG_KEY
+            # db_post = BlogDb(parent=blog_key(),
+            #                  db_post_subject=post_subject
+            #                  db_post_content=post_content)
+            db_post = BlogDb(db_subject=post_subject,
+                             db_content=post_content)
             db_post.put()
             self.redirect('/%s' % str(db_post.key().id()))
         else:
@@ -144,7 +153,10 @@ class PermaPost(Handler):
         function gets the primary key for the current
         blog and renders a permalink if it exists.
         """
-        key = db.Key.from_path('DbHandler', int(post_id), parent=blog_key())
+
+        # COMMENTED OUT TO TEST WITHOUT BLOGKEY
+        # key = db.Key.from_path('BlogDb', int(post_id), parent=blog_key())
+        key = db.Key.from_path('BlogDb', int(post_id))
         perma_post = db.get(key)
 
         if not perma_post:
@@ -209,10 +221,34 @@ class WelcomeHandler(Handler):
             self.render("welcome.html", user_id=user_name)
 
 
+# ART HOMEWORK
+class Art(db.model):
+    title = db.StringProperty(Required=True)
+    art = db.TextProperty(Required=True)
+    created = db.DateTimeProperty(auto_now_add=True)
+
+
+class ArtHandler(Handler):
+    def get(self, title="", art="", error=""):
+        arts = db.GqlQuery("select * from Art "
+                           "order by created desc limit 10")
+        self.render('asciiart.html', title=title,
+                    art=art, error=error, arts=arts)
+
+    def post(self):
+        title = self.request.get("title")
+        art = self.request.get("art")
+
+        a = Art(title=title, art=art)
+        a.put()
+
+        self.redirect("/asciiart.html")
+
 # GAE APPLICATION VARIABLE
 # This variable sets the atributes of the individual HTML
 # files that will be served using google app engine.
 WSGI_APP = webapp2.WSGIApplication([
+    ('/asciiart', ArtHandler),
     ('/?', MainPage),
     ('/([0-9]+)', PermaPost),
     ('/newpost', NewPostHandler),
