@@ -39,7 +39,7 @@ def valid_email(email):
     return not email or EMAIL_RE.match(email)
 
 
-def blog_name(name='default'):
+def blog_key(name='default'):
     return db.key.from_path('blogs', name)
 
 
@@ -65,7 +65,6 @@ class Handler(webapp2.RequestHandler):
         self.write(self.render_str(template, **kw))
 
 
-class DbPostHandler(db.Model, Handler):
     """ This is the handler class for the new blog post datastore """
     db_post_subject = db.StringProperty(required=True)
     db_post_content = db.TextProperty(required=True)
@@ -77,20 +76,11 @@ class DbPostHandler(db.Model, Handler):
         return self.render("post.html", post=self)
 
 
-class NewPostHandler(Handler):
-    """ This is the new handler class for the new blog post page """
-    def render_new_post(self, post_subject="", post_content="", post_error=""):
-        """ handles rendering new posts if there is an """
-        self.render("newpost.html", subject=post_subject,
-                    content=post_content,
-                    error=post_error)
 
     def get(self):
         """
         uses GET request to render the new
-        post page from render_new_post
         """
-        self.render_new_post()
 
     def post(self):
         """
@@ -101,10 +91,7 @@ class NewPostHandler(Handler):
         post_content = self.request.get('content')
 
         if post_subject and post_content:
-            cursor = DbPostHandler(db_post_subject=post_subject,
-                                   db_post_content=post_content)
             cursor.put()
-            self.redirect("/")
         else:
             post_error = "Please submit both the title and the post content. "
             self.render("newpost.html", subject=post_subject,
