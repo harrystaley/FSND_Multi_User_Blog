@@ -7,8 +7,8 @@ to backend course in preparation for the multi-user blog project -->
 
 {% block content %}
 
-  {% for post in posts %}
-    {{ post.render() | safe }}
+  {% for db_post in db_posts %}
+    {{ db_post.render_post() | safe }}
     <br><br>
   {% endfor %}
 

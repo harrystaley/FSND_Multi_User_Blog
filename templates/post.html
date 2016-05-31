@@ -10,16 +10,16 @@ to backend course in preparation for the multi-user blog project -->
 <div class="post">
   <div class="post-heading">
     <div class="post-title">
-      {{post.subject}}
+      {{db_post.subject}}
     </div>
 
     <div class="post-date">
-      {{post.created.strftime("%b %d, %Y")}}
+      {{db_post.created.strftime("%b %d, %Y")}}
     </div>
   </div>
 
   <div class="post-content">
-    {{post._render_text | safe}}
+    {{db_post._render_text | safe}}
   </div>
 </div>
 {{% endblock %}}
