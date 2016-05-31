@@ -1,3 +1,4 @@
+# LIBRARY IMPORTS
 import os
 # import jinja2 lib
 import jinja2
@@ -11,6 +12,7 @@ from google.appengine.ext import db
 __author__ = "Harry Staley <staleyh@gmail.com>"
 __version__ = "1.0"
 
+# FILE LEVEL VARIABLES/CONSTANTS
 
 # sets the locaiton of the templates folder contained in the home of this file.
 TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), 'templates')
@@ -23,6 +25,8 @@ USER_RE = re.compile("^[a-zA-Z0-9_-]{3,20}$")
 PASS_RE = re.compile("^.{3,20}$")
 EMAIL_RE = re.compile("^[\S]+@[\S]+.[\S]+$")
 
+
+# FILE LEVEL FUNCTIONS
 
 def valid_user_id(user_id):
     """ validates the user id input by passing it through regex """
@@ -40,8 +44,14 @@ def valid_email(email):
 
 
 def blog_key(name='default'):
+    """
+    This is the key that defines a single blog and facilitiate multiple
+    blogs on the same site.
+    """
     return db.key.from_path('blogs', name)
 
+
+# CLASS DEFINITIONS
 
 class Handler(webapp2.RequestHandler):
     """
@@ -65,22 +75,46 @@ class Handler(webapp2.RequestHandler):
         self.write(self.render_str(template, **kw))
 
 
-    """ This is the handler class for the new blog post datastore """
+class DbHandler(db.Model):
+    """
+    This is the handler class for the new blog post datastore.
+    This class both instantuates and defines the datastore
+    with the exception of blog_key.
+    """
     db_post_subject = db.StringProperty(required=True)
     db_post_content = db.TextProperty(required=True)
     db_post_created = db.DateTimeProperty(auto_now_add=True)
     db_post_modified = db.DateTimeProperty(auto_now=True)
 
     def render_post(self):
+        """
+        Renders the blog post replacing cariage returns in the text with
+        html so that it displays correctly in the borowser.
+        """
         self._render_text = self.content.replace('\n', '<br>')
-        return self.render("post.html", post=self)
+        return self.render("post.html", db_post=self)
 
 
+class MainPage(Handler):
+    """ This is the handler class for the main page for the blog. """
 
     def get(self):
         """
-        uses GET request to render the new
+        queries the database for the 10 most recent
+        blog posts and orders them descending
         """
+        db_posts = db.GqlQuery("select * from DbHandler " +
+                               "order by created desc limit 10")
+        self.render('front.html', db_posts=db_posts)
+
+
+class NewPostHandler(Handler):
+    """ This is the handler class for the new blog post page """
+    def get(self):
+        """
+        uses GET request to render the new post
+        """
+        self.render("newpost.html")
 
     def post(self):
         """
@@ -91,12 +125,33 @@ class Handler(webapp2.RequestHandler):
         post_content = self.request.get('content')
 
         if post_subject and post_content:
-            cursor.put()
+            db_post = DbHandler(parent=blog_key(),
+                                db_post_subject=post_subject,
+                                db_post_content=post_content)
+            db_post.put()
+            self.redirect('/%s' % str(db_post.key().id()))
         else:
             post_error = "Please submit both the title and the post content. "
             self.render("newpost.html", subject=post_subject,
                         content=post_content,
                         error=post_error)
+
+
+class PermaPost(Handler):
+    """ Class to handle successfull blog posts """
+    def get(self, post_id):
+        """
+        function gets the primary key for the current
+        blog and renders a permalink if it exists.
+        """
+        key = db.Key.from_path('DbHandler', int(post_id), parent=blog_key())
+        perma_post = db.get(key)
+
+        if not perma_post:
+            self.error(404)
+            return
+        else:
+            self.render("permalink.html", perma_post=perma_post)
 
 
 class UserSignupHandler(Handler):
@@ -154,7 +209,12 @@ class WelcomeHandler(Handler):
             self.render("welcome.html", user_id=user_name)
 
 
+# GAE APPLICATION VARIABLE
+# This variable sets the atributes of the individual HTML
+# files that will be served using google app engine.
 WSGI_APP = webapp2.WSGIApplication([
+    ('/?', MainPage),
+    ('/([0-9]+)', PermaPost),
     ('/newpost', NewPostHandler),
     ('/signup', UserSignupHandler),
     ('/welcome', WelcomeHandler)
