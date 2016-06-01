@@ -43,18 +43,18 @@ def valid_email(email):
     return not email or EMAIL_RE.match(email)
 
 
-def render_post(response, post):
-        response.out.write('<b>' + BlogDb.db_subject + '</b><br>')
-        response.out.write(BlogDb.db_content)
+def render_post(response, DbPost):
+        """ handler for rendering posts """
+        response.out.write('<b>' + DbPost.db_subject + '</b><br>')
+        response.out.write(DbPost.db_content)
 
 
-# COMMENTED OUT TO TEST WITHOUT BLOGKEY
-# def blog_key(name='default'):
-#     """
-#     This is the key that defines a single blog and facilitiate multiple
-#     blogs on the same site.
-#     """
-#     return db.key.from_path('blogs', name)
+def blog_key(name='default'):
+    """
+    This is the key that defines a single blog and facilitiate multiple
+    blogs on the same site.
+    """
+    return db.key.from_path('blogs', name)
 
 
 # CLASS DEFINITIONS
@@ -81,7 +81,7 @@ class Handler(webapp2.RequestHandler):
         self.write(self.render_str(template, **kw))
 
 
-class BlogDb(Handler, db.Model):
+class DbPost(Handler, db.Model):
     """
     This is the handler class for the new blog post datastore.
     This class both instantuates and defines the datastore
@@ -98,7 +98,7 @@ class BlogDb(Handler, db.Model):
         html so that it displays correctly in the borowser.
         """
         self._render_text = self.db_content.replace('\n', '<br>')
-        return render_str("post.html", db_post=self)
+        return self.render_str("post.html", db_post=self)
 
 
 class MainPage(Handler):
@@ -109,9 +109,9 @@ class MainPage(Handler):
         queries the database for the 10 most recent
         blog posts and orders them descending
         """
-        db_posts = db.GqlQuery("select * from BlogDb " +
+        db_posts = db.GqlQuery("select * from DbPost " +
                                "order by post_created desc limit 10")
-        self.render('front.html', db_posts=db_posts)
+        self.render("front.html", db_posts=db_posts)
 
 
 class NewPostHandler(Handler):
@@ -127,23 +127,20 @@ class NewPostHandler(Handler):
         handles the POST request
         from the new post page
         """
-        post_subject = self.request.get('subject')
-        post_content = self.request.get('content')
+        input_subject = self.request.get('subject')
+        input_content = self.request.get('content')
 
-        if post_subject and post_content:
-            # COMMENTED OUT TO TEST WITHOUT BLOG_KEY
-            # db_post = BlogDb(parent=blog_key(),
-            #                  db_post_subject=post_subject
-            #                  db_post_content=post_content)
-            db_post = BlogDb(db_subject=post_subject,
-                             db_content=post_content)
-            db_post.put()
-            self.redirect('/%s' % str(db_post.key().id()))
+        if input_subject and input_content:
+            db_cursor = DbPost(parent=blog_key(),
+                               db_subject=input_subject,
+                               db_content=input_content)
+            db_cursor.put()
+            self.redirect('/%s' % str(db_cursor.key().id()))
         else:
-            post_error = "Please submit both the title and the post content. "
-            self.render("newpost.html", subject=post_subject,
-                        content=post_content,
-                        error=post_error)
+            input_error = "Please submit both the title and the post content. "
+            self.render("newpost.html", subject=input_subject,
+                        content=input_content,
+                        error=input_error)
 
 
 class PermaPost(Handler):
@@ -153,16 +150,13 @@ class PermaPost(Handler):
         function gets the primary key for the current
         blog and renders a permalink if it exists.
         """
-
-        # COMMENTED OUT TO TEST WITHOUT BLOGKEY
-        # key = db.Key.from_path('BlogDb', int(post_id), parent=blog_key())
-        key = db.Key.from_path('BlogDb', int(post_id))
+        key = db.Key.from_path('DbPost', int(post_id), parent=blog_key())
         perma_post = db.get(key)
 
         if not perma_post:
             self.error(404)
             return
-        else:
+
             self.render("permalink.html", perma_post=perma_post)
 
 
@@ -221,35 +215,11 @@ class WelcomeHandler(Handler):
             self.render("welcome.html", user_id=user_name)
 
 
-# ART HOMEWORK
-class Art(db.model):
-    title = db.StringProperty(Required=True)
-    art = db.TextProperty(Required=True)
-    created = db.DateTimeProperty(auto_now_add=True)
-
-
-class ArtHandler(Handler):
-    def get(self, title="", art="", error=""):
-        arts = db.GqlQuery("select * from Art "
-                           "order by created desc limit 10")
-        self.render('asciiart.html', title=title,
-                    art=art, error=error, arts=arts)
-
-    def post(self):
-        title = self.request.get("title")
-        art = self.request.get("art")
-
-        a = Art(title=title, art=art)
-        a.put()
-
-        self.redirect("/asciiart.html")
-
 # GAE APPLICATION VARIABLE
 # This variable sets the atributes of the individual HTML
 # files that will be served using google app engine.
 WSGI_APP = webapp2.WSGIApplication([
-    ('/asciiart', ArtHandler),
-    ('/?', MainPage),
+    ('/', MainPage),
     ('/([0-9]+)', PermaPost),
     ('/newpost', NewPostHandler),
     ('/signup', UserSignupHandler),

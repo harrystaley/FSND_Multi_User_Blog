@@ -8,14 +8,14 @@ blog project -->
 
 {% block content %}
 
-<form action="" method="post" id="SignUpForm">
-	<fieldset class="accountInfo">
+<form action="" method="post" id="BlogPostForm">
+	<fieldset class="postForm">
 		<legend>Add New Blog Post</legend>
 		<span class="error">{{error}}</span>
 		<p><label for="subject">Title</label>
-			<input type="text" name="subject" value="{{subject}}" placeholder="Required">
+			<input class="postSubject" type="text" name="subject" value="{{subject}}">
 		<p><label for="content">Content</label>
-			<input type="textarea" name="content" value="{{content}}" placeholder="Required">
+			<textarea class="postContent" name="content">{{content}}</textarea>
 	</fieldset>
 	<fieldset class="accountAction">
 		<input type="submit" class="btn btn-default" name="submit" value="Submit Post">
