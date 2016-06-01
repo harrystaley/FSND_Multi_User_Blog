@@ -44,9 +44,9 @@ def valid_email(email):
 
 
 def render_post(response, DbPost):
-        """ handler for rendering posts """
-        response.out.write('<b>' + DbPost.db_subject + '</b><br>')
-        response.out.write(DbPost.db_content)
+    """ handler for rendering posts """
+    response.out.write('<b>' + DbPost.db_subject + '</b><br>')
+    response.out.write(DbPost.db_content)
 
 
 def blog_key(name='default'):
@@ -54,14 +54,14 @@ def blog_key(name='default'):
     This is the key that defines a single blog and facilitiate multiple
     blogs on the same site.
     """
-    return db.key.from_path('blogs', name)
+    return db.Key.from_path('blogs', name)
 
 
 # CLASS DEFINITIONS
 
-class Handler(webapp2.RequestHandler):
+class TemplateHandler(webapp2.RequestHandler):
     """
-    Handler class for all functions in this app for rendering
+     TemplateHandler class for all functions in this app for rendering
     any templates.
     """
 
@@ -81,7 +81,7 @@ class Handler(webapp2.RequestHandler):
         self.write(self.render_str(template, **kw))
 
 
-class DbPost(db.Model):
+class DbPost(TemplateHandler, db.Model):
     """
     This is the handler class for the new blog post datastore.
     This class both instantuates and defines the datastore
@@ -98,10 +98,10 @@ class DbPost(db.Model):
         html so that it displays correctly in the borowser.
         """
         self._render_text = self.db_content.replace('\n', '<br>')
-        return self.render_str("post.html", db_post=self)
+        return self.render("post.html", db_post=self)
 
 
-class MainPage(Handler):
+class MainPage(TemplateHandler):
     """ This is the handler class for the main page for the blog. """
 
     def get(self):
@@ -110,11 +110,11 @@ class MainPage(Handler):
         blog posts and orders them descending
         """
         db_posts = db.GqlQuery("select * from DbPost " +
-                               "order by post_created desc limit 10")
+                               "order by db_created desc limit 10")
         self.render("front.html", db_posts=db_posts)
 
 
-class NewPostHandler(Handler):
+class NewPostHandler(TemplateHandler):
     """ This is the handler class for the new blog post page """
     def get(self):
         """
@@ -129,13 +129,13 @@ class NewPostHandler(Handler):
         """
         input_subject = self.request.get('subject')
         input_content = self.request.get('content')
-
+        # if subject and content exist store them in the database and redirect
         if input_subject and input_content:
-            db_cursor = DbPost(parent=blog_key(),
-                               db_subject=input_subject,
-                               db_content=input_content)
-            db_cursor.put()
-            self.redirect('/%s' % str(db_cursor.key().id()))
+            db_post = DbPost(parent=blog_key(),
+                             db_subject=input_subject,
+                             db_content=input_content)
+            db_post.put()
+            self.redirect('/%s' % str(db_post.key().id()))
         else:
             input_error = "Please submit both the title and the post content. "
             self.render("newpost.html", subject=input_subject,
@@ -143,24 +143,24 @@ class NewPostHandler(Handler):
                         error=input_error)
 
 
-class PermaPost(Handler):
+class PermaPost(TemplateHandler):
     """ Class to handle successfull blog posts """
     def get(self, post_id):
         """
         function gets the primary key for the current
         blog and renders a permalink if it exists.
         """
-        key = db.Key.from_path('DbPost', int(post_id), parent=blog_key())
-        perma_post = db.get(key)
+        dbkey = db.Key.from_path('DbPost', int(post_id), parent=blog_key())
+        perma_post = db.get(dbkey)
 
         if not perma_post:
             self.error(404)
             return
+        else:
+            self.render("permalink.html", db_post=perma_post)
 
-            self.render("permalink.html", perma_post=perma_post)
 
-
-class UserSignupHandler(Handler):
+class UserSignupHandler(TemplateHandler):
     """ This is the hander class for the user sign up page """
 
     def get(self):
@@ -205,7 +205,7 @@ class UserSignupHandler(Handler):
             self.redirect('/welcome?user_id=' + user_id)
 
 
-class WelcomeHandler(Handler):
+class WelcomeHandler(TemplateHandler):
     """ This is the handler class for the welcome page """
     def get(self):
         """ handles the GET request for the welcome paage """
@@ -215,11 +215,41 @@ class WelcomeHandler(Handler):
             self.render("welcome.html", user_id=user_name)
 
 
+# ART HOMEWORK
+class Art(db.Model):
+    """ Database class for art homework """
+    title = db.StringProperty(required=True)
+    art = db.TextProperty(required=True)
+    created = db.DateTimeProperty(auto_now_add=True)
+
+
+class ArtHandler(TemplateHandler):
+    """ This is the handler class fo the art homework """
+    def render_art(self, title="", art="", error=""):
+        arts = db.GqlQuery("SELECT * FROM Art " +
+                           "ORDER BY created DESC ")
+        self.render('asciiart.html', title=title,
+                    art=art, error=error, arts=arts)
+
+    def get(self):
+        self.render_art()
+
+    def post(self):
+        title = self.request.get("title")
+        art = self.request.get("art")
+
+        a = Art(title=title, art=art)
+        a.put()
+
+        self.redirect("/asciiart")
+
+
 # GAE APPLICATION VARIABLE
 # This variable sets the atributes of the individual HTML
 # files that will be served using google app engine.
 WSGI_APP = webapp2.WSGIApplication([
-    ('/', MainPage),
+    ('/asciiart', ArtHandler),
+    ('/?', MainPage),
     ('/([0-9]+)', PermaPost),
     ('/newpost', NewPostHandler),
     ('/signup', UserSignupHandler),
