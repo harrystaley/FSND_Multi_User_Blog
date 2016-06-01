@@ -8,7 +8,7 @@ body, legend {
 }
 
 fieldset {
-	width: 500px;
+	width: 700px;
 }
 
 fieldset p {
@@ -16,7 +16,7 @@ fieldset p {
 	padding: 5px;
 }
 
-input {
+input, textarea {
 	min-width: 48px;
 	min-height: 48px;
 	color: black;
@@ -34,7 +34,6 @@ label {
 	float: left;
 	font-weight: bold;
 }
-
 
 .btn-default {
 	background-color: #294860;
@@ -60,6 +59,18 @@ label {
 
 .logo {
 	width: 20%;
+}
+
+.postContent {
+	min-width: 500px;
+	min-height: 200px;
+	color: black;
+}
+
+.postSubject {
+	min-width: 500px;
+	min-height: 48px;
+	color: black;
 }
 
 .social-media {
