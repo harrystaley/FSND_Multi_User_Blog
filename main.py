@@ -81,7 +81,7 @@ class Handler(webapp2.RequestHandler):
         self.write(self.render_str(template, **kw))
 
 
-class DbPost(Handler, db.Model):
+class DbPost(db.Model):
     """
     This is the handler class for the new blog post datastore.
     This class both instantuates and defines the datastore
