@@ -12,6 +12,14 @@ from google.appengine.ext import db
 __author__ = "Harry Staley <staleyh@gmail.com>"
 __version__ = "1.0"
 
+
+# TODO: once I get the file working with the example variable style I should
+# change the post variable and classnames so that they do not share
+# the same name with the post from the RequestHandler class imported
+# from webapp2. Info on webapp2 framework can be found at:
+# https://cloud.google.com/appengine/docs/python/gettingstartedpython27/usingwebapp#hello-webapp2
+
+
 # FILE LEVEL VARIABLES/CONSTANTS
 
 # sets the locaiton of the templates folder contained in the home of this file.
@@ -41,12 +49,6 @@ def valid_password(password):
 def valid_email(email):
     """ validates the email input by passing it through regex """
     return not email or EMAIL_RE.match(email)
-
-
-def render_post(response, DbPost):
-    """ handler for rendering posts """
-    response.out.write('<b>' + DbPost.db_subject + '</b><br>')
-    response.out.write(DbPost.db_content)
 
 
 def blog_key(name='default'):
@@ -98,7 +100,7 @@ class Post(TemplateHandler, db.Model):
         html so that it displays correctly in the borowser.
         """
         self._render_text = self.content.replace('\n', '<br>')
-        return self.render("post.html", db_post=self)
+        return self.render("post.html", post=self)
 
 
 class MainPage(TemplateHandler):
@@ -127,19 +129,24 @@ class NewPostHandler(TemplateHandler):
         handles the POST request
         from the new post page
         """
-        input_subject = self.request.get('subject')
-        input_content = self.request.get('content')
-        # if subject and content exist store them in the database and redirect
-        if input_subject and input_content:
-            post = Post(parent=blog_key(),
-                        subject=input_subject,
-                        content=input_content)
+        subject = self.request.get('subject')
+        content = self.request.get('content')
+        # if subject and content exist create an entity (row) in the GAE
+        # datastor (database) and redirect to a permanent link to the post
+        if subject and content:
+            post = Post(parent=blog_key())
+            post.subject = subject
+            post.content = content
             post.put()
-            self.redirect('/%s' % str(post.key().id()))
+            # redirects to a single blog post passing the post id
+            # from the function as a string to a pagewhere the post_id
+            # is the url
+            post_id = post.key().id()
+            self.redirect('/%s' % str(post_id))
         else:
             input_error = "Please submit both the title and the post content. "
-            self.render("newpost.html", subject=input_subject,
-                        content=input_content,
+            self.render("newpost.html", subject=subject,
+                        content=content,
                         error=input_error)
 
 
@@ -147,17 +154,17 @@ class PermaPost(TemplateHandler):
     """ Class to handle successfull blog posts """
     def get(self, post_id):
         """
-        function gets the primary key for the current
+        function gets the post_id from for the current
         blog and renders a permalink if it exists.
         """
-        dbkey = db.Key.from_path('DbPost', int(post_id), parent=blog_key())
-        perma_post = db.get(dbkey)
+        post_db_Key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        perma_post = db.get(post_db_Key)
 
         if not perma_post:
             self.error(404)
             return
-        else:
-            self.render("permalink.html", db_post=perma_post)
+
+        self.render("permalink.html", post=perma_post)
 
 
 class UserSignupHandler(TemplateHandler):
@@ -220,6 +227,8 @@ class WelcomeHandler(TemplateHandler):
 # files that will be served using google app engine.
 WSGI_APP = webapp2.WSGIApplication([
     ('/?', MainPage),
+    # '/([0-9]+)' recieves post_id from NewPostHandler class passing it
+    # into PermaPost class via the url using regular expression
     ('/([0-9]+)', PermaPost),
     ('/newpost', NewPostHandler),
     ('/signup', UserSignupHandler),

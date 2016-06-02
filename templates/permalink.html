@@ -7,5 +7,5 @@ to backend course in preparation for the multi-user blog project -->
 
 {% block content %}
 <!-- renders a single blog post from PermaPost class using render from handler class in in main.py -->
-  {{perma_post.render() | safe}}
+  {{post.render() | safe}}
 {% endblock %}
