@@ -81,23 +81,23 @@ class TemplateHandler(webapp2.RequestHandler):
         self.write(self.render_str(template, **kw))
 
 
-class DbPost(TemplateHandler, db.Model):
+class Post(TemplateHandler, db.Model):
     """
-    This is the handler class for the new blog post datastore.
-    This class both instantuates and defines the datastore
-    with the exception of blog_key.
+    Instantiates the class for a kind (table) in the GAE datastor
+    consisting of properties (fields).
+
     """
-    db_subject = db.StringProperty(required=True)
-    db_content = db.TextProperty(required=True)
-    db_created = db.DateTimeProperty(auto_now_add=True)
-    db_modified = db.DateTimeProperty(auto_now=True)
+    subject = db.StringProperty(required=True)
+    content = db.TextProperty(required=True)
+    created = db.DateTimeProperty(auto_now_add=True)
+    modified = db.DateTimeProperty(auto_now=True)
 
     def render(self):
         """
         Renders the blog post replacing cariage returns in the text with
         html so that it displays correctly in the borowser.
         """
-        self._render_text = self.db_content.replace('\n', '<br>')
+        self._render_text = self.content.replace('\n', '<br>')
         return self.render("post.html", db_post=self)
 
 
@@ -109,9 +109,9 @@ class MainPage(TemplateHandler):
         queries the database for the 10 most recent
         blog posts and orders them descending
         """
-        db_posts = db.GqlQuery("select * from DbPost " +
-                               "order by db_created desc limit 10")
-        self.render("front.html", db_posts=db_posts)
+        posts = db.GqlQuery("SELECT * FROM Post "
+                            "ORDER BY created DESC LIMIT 10")
+        self.render("front.html", posts=posts)
 
 
 class NewPostHandler(TemplateHandler):
@@ -131,11 +131,11 @@ class NewPostHandler(TemplateHandler):
         input_content = self.request.get('content')
         # if subject and content exist store them in the database and redirect
         if input_subject and input_content:
-            db_post = DbPost(parent=blog_key(),
-                             db_subject=input_subject,
-                             db_content=input_content)
-            db_post.put()
-            self.redirect('/%s' % str(db_post.key().id()))
+            post = Post(parent=blog_key(),
+                        subject=input_subject,
+                        content=input_content)
+            post.put()
+            self.redirect('/%s' % str(post.key().id()))
         else:
             input_error = "Please submit both the title and the post content. "
             self.render("newpost.html", subject=input_subject,
@@ -215,40 +215,10 @@ class WelcomeHandler(TemplateHandler):
             self.render("welcome.html", user_id=user_name)
 
 
-# ART HOMEWORK
-class Art(db.Model):
-    """ Database class for art homework """
-    title = db.StringProperty(required=True)
-    art = db.TextProperty(required=True)
-    created = db.DateTimeProperty(auto_now_add=True)
-
-
-class ArtHandler(TemplateHandler):
-    """ This is the handler class fo the art homework """
-    def render_art(self, title="", art="", error=""):
-        arts = db.GqlQuery("SELECT * FROM Art " +
-                           "ORDER BY created DESC ")
-        self.render('asciiart.html', title=title,
-                    art=art, error=error, arts=arts)
-
-    def get(self):
-        self.render_art()
-
-    def post(self):
-        title = self.request.get("title")
-        art = self.request.get("art")
-
-        a = Art(title=title, art=art)
-        a.put()
-
-        self.redirect("/asciiart")
-
-
 # GAE APPLICATION VARIABLE
 # This variable sets the atributes of the individual HTML
 # files that will be served using google app engine.
 WSGI_APP = webapp2.WSGIApplication([
-    ('/asciiart', ArtHandler),
     ('/?', MainPage),
     ('/([0-9]+)', PermaPost),
     ('/newpost', NewPostHandler),
