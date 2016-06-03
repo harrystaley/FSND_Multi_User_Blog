@@ -83,7 +83,7 @@ class TemplateHandler(webapp2.RequestHandler):
         self.write(self.render_str(template, **kw))
 
 
-class Post(TemplateHandler, db.Model):
+class Post(db.Model, TemplateHandler):
     """
     Instantiates the class for a kind (table) in the GAE datastor
     consisting of properties (fields).
@@ -100,7 +100,7 @@ class Post(TemplateHandler, db.Model):
         html so that it displays correctly in the borowser.
         """
         self._render_text = self.content.replace('\n', '<br>')
-        return self.render("post.html", post=self)
+        self.render_str("post.html", post=self)
 
 
 class MainPage(TemplateHandler):
@@ -134,9 +134,9 @@ class NewPostHandler(TemplateHandler):
         # if subject and content exist create an entity (row) in the GAE
         # datastor (database) and redirect to a permanent link to the post
         if subject and content:
-            post = Post(parent=blog_key())
-            post.subject = subject
-            post.content = content
+            post = Post(parent=blog_key(),
+                        subject=subject,
+                        content=content)
             post.put()
             # redirects to a single blog post passing the post id
             # from the function as a string to a pagewhere the post_id
@@ -150,15 +150,15 @@ class NewPostHandler(TemplateHandler):
                         error=input_error)
 
 
-class PermaPost(TemplateHandler):
-    """ Class to handle successfull blog posts """
+class PermaLinkHandler(TemplateHandler):
+    """ Class to handle successfull blog posts that returns a permalink """
     def get(self, post_id):
         """
         function gets the post_id from for the current
         blog and renders a permalink if it exists.
         """
-        post_db_Key = db.Key.from_path('Post', int(post_id), parent=blog_key())
-        perma_post = db.get(post_db_Key)
+        db_key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        perma_post = db.get(db_key)
 
         if not perma_post:
             self.error(404)
@@ -229,7 +229,7 @@ WSGI_APP = webapp2.WSGIApplication([
     ('/?', MainPage),
     # '/([0-9]+)' recieves post_id from NewPostHandler class passing it
     # into PermaPost class via the url using regular expression
-    ('/([0-9]+)', PermaPost),
+    ('/([0-9]+)', PermaLinkHandler),
     ('/newpost', NewPostHandler),
     ('/signup', UserSignupHandler),
     ('/welcome', WelcomeHandler)
