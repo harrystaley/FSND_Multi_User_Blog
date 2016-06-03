@@ -129,14 +129,14 @@ class NewPostHandler(TemplateHandler):
         handles the POST request
         from the new post page
         """
-        subject = self.request.get('subject')
-        content = self.request.get('content')
+        subject_input = self.request.get('subject')
+        content_input = self.request.get('content')
         # if subject and content exist create an entity (row) in the GAE
         # datastor (database) and redirect to a permanent link to the post
-        if subject and content:
+        if subject_input and content_input:
             post = Post(parent=blog_key(),
-                        subject=subject,
-                        content=content)
+                        subject=subject_input,
+                        content=subject_input)
             post.put()
             # redirects to a single blog post passing the post id
             # from the function as a string to a pagewhere the post_id
@@ -145,8 +145,8 @@ class NewPostHandler(TemplateHandler):
             self.redirect('/%s' % str(post_id))
         else:
             input_error = "Please submit both the title and the post content. "
-            self.render("newpost.html", subject=subject,
-                        content=content,
+            self.render("newpost.html", subject=subject_input,
+                        content=content_input,
                         error=input_error)
 
 
@@ -163,8 +163,8 @@ class PermaLinkHandler(TemplateHandler):
         if not perma_post:
             self.error(404)
             return
-
-        self.render("permalink.html", post=perma_post)
+        else:
+            self.render("permalink.html", post=perma_post)
 
 
 class UserSignupHandler(TemplateHandler):
