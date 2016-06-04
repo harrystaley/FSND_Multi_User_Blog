@@ -6,9 +6,9 @@ This template is borrowed from the project answer files in the intro
 to backend course in preparation for the multi-user blog project -->
 
 {% block content %}
-
+<!-- for each post in the posts table it calls render_post from the post class in main.py -->
   {% for post in posts %}
-    {{ post.render() | safe }}
+    {{ post.render_post() | safe }}
     <br><br>
   {% endfor %}
 

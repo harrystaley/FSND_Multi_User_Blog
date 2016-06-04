@@ -59,6 +59,12 @@ def blog_key(name='default'):
     return db.Key.from_path('blogs', name)
 
 
+def render_str(template, **params):
+        """ Gets the template and passes it with paramanters. """
+        tmp = JINJA_ENV.get_template(template)
+        return tmp.render(params)
+
+
 # CLASS DEFINITIONS
 
 class TemplateHandler(webapp2.RequestHandler):
@@ -71,19 +77,21 @@ class TemplateHandler(webapp2.RequestHandler):
         """ displays the respective function, parameters, ect. """
         self.response.out.write(*a, **kw)
 
-    def render_str(self, template, **params):
-        """ Gets the template and passes it with paramanters. """
-        tmp = JINJA_ENV.get_template(template)
-        return tmp.render(params)
+    def render_tmp(self, template, **params):
+        """
+        Gets the template and passes it with paramanters to a
+        file level function called render_str.
+        """
+        return render_str(template, **params)
 
     def render(self, template, **kw):
         """
-        Calls render_str and displays the template.
+        Calls render_tmp and write to display the template.
         """
-        self.write(self.render_str(template, **kw))
+        self.write(self.render_tmp(template, **kw))
 
 
-class Post(db.Model, TemplateHandler):
+class Post(db.Model):
     """
     Instantiates the class for a kind (table) in the GAE datastor
     consisting of properties (fields).
@@ -94,13 +102,13 @@ class Post(db.Model, TemplateHandler):
     created = db.DateTimeProperty(auto_now_add=True)
     modified = db.DateTimeProperty(auto_now=True)
 
-    def render(self):
+    def render_post(self):
         """
         Renders the blog post replacing cariage returns in the text with
         html so that it displays correctly in the borowser.
         """
         self._render_text = self.content.replace('\n', '<br>')
-        self.render_str("post.html", post=self)
+        return render_str("post.html", post=self)
 
 
 class MainPage(TemplateHandler):
@@ -120,14 +128,14 @@ class NewPostHandler(TemplateHandler):
     """ This is the handler class for the new blog post page """
     def get(self):
         """
-        uses GET request to render the new post
+        uses GET request to render newpost.html by calling render from the
+        TemplateHandler class
         """
         self.render("newpost.html")
 
     def post(self):
         """
-        handles the POST request
-        from the new post page
+        handles the POST request from newpost.html
         """
         subject_input = self.request.get('subject')
         content_input = self.request.get('content')
@@ -136,13 +144,13 @@ class NewPostHandler(TemplateHandler):
         if subject_input and content_input:
             post = Post(parent=blog_key(),
                         subject=subject_input,
-                        content=subject_input)
+                        content=content_input)
             post.put()
             # redirects to a single blog post passing the post id
             # from the function as a string to a pagewhere the post_id
             # is the url
-            post_id = post.key().id()
-            self.redirect('/%s' % str(post_id))
+            post_id = str(post.key().id())
+            self.redirect('/%s' % post_id)
         else:
             input_error = "Please submit both the title and the post content. "
             self.render("newpost.html", subject=subject_input,
@@ -154,8 +162,9 @@ class PermaLinkHandler(TemplateHandler):
     """ Class to handle successfull blog posts that returns a permalink """
     def get(self, post_id):
         """
-        function gets the post_id from for the current
-        blog and renders a permalink if it exists.
+        uses GET request to get the post_id from the new post
+        and renders permalink.html if the blog post exists by
+        passing the template into render from the TemplateHandler class.
         """
         db_key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         perma_post = db.get(db_key)
@@ -171,13 +180,15 @@ class UserSignupHandler(TemplateHandler):
     """ This is the hander class for the user sign up page """
 
     def get(self):
-        """ uses GET request to render the main page """
+        """
+        uses GET request to render signup.html by passing signup.html into
+        render from the TemplateHandler class.
+        """
         self.render("signup.html")
 
     def post(self):
-        """ handles the POST request from the signup page """
+        """ handles the POST request from signup.html """
         have_error = False
-        # GET requests for user input from signup page
         user_id = self.request.get('user_id')
         password_1 = self.request.get('password_1')
         password_2 = self.request.get('password_2')
@@ -215,9 +226,10 @@ class UserSignupHandler(TemplateHandler):
 class WelcomeHandler(TemplateHandler):
     """ This is the handler class for the welcome page """
     def get(self):
-        """ handles the GET request for the welcome paage """
+        """ handles the GET request for welcome.html """
         user_name = self.request.get('user_id')
-        # If user_id is valid render the welcome page.
+        # If user_id is valid render the welcome page by calling
+        # render from TemplateHandler class.
         if valid_user_id(user_name):
             self.render("welcome.html", user_id=user_name)
 

@@ -6,6 +6,6 @@ The idea for this template is borrowed from the project files in the intro
 to backend course in preparation for the multi-user blog project -->
 
 {% block content %}
-<!-- renders a single blog post from PermaPost class using render from handler class in in main.py -->
-  {{post.render() | safe}}
+<!-- renders a single blog post from PermaPost class using render post from post class in in main.py -->
+  {{post.render_post() | safe}}
 {% endblock %}
