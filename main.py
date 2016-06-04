@@ -60,9 +60,9 @@ def blog_key(name='default'):
 
 
 def render_str(template, **params):
-        """ Gets the template and passes it with paramanters. """
-        tmp = JINJA_ENV.get_template(template)
-        return tmp.render(params)
+    """ Gets the template and passes it with paramanters. """
+    tmp = JINJA_ENV.get_template(template)
+    return tmp.render(params)
 
 
 # CLASS DEFINITIONS
