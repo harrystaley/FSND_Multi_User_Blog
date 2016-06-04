@@ -131,7 +131,18 @@ class NewPostHandler(TemplateHandler):
         uses GET request to render newpost.html by calling render from the
         TemplateHandler class
         """
-        self.render("newpost.html")
+        # sets a cookie that tracks then number of visits to NewPost.html
+        self.response.headers['Content Type'] = 'text/plain'
+        visits = self.request.cookies.get('visits', '0')
+        # checks to see if the string variable vistis is a number
+        # and if it is changes the string to an int and increments it by 1
+        if visits.isdigit():
+            visits = int(visits) + 1
+        else:
+            visits = 0
+        # sets the value of visits in the cookie to the variable visits
+        self.response.headers.add_header('set-cookie', 'visits=%s' % visits)
+        self.render("newpost.html", visits=visits)
 
     def post(self):
         """
