@@ -15,7 +15,6 @@ extend base.html -->
     <div class="post-title">
       Title: {{post.subject}}
     </div>
-
     <div class="post-date">
       Created: {{post.created.strftime("%b %d, %Y")}}
     </div>
@@ -23,7 +22,6 @@ extend base.html -->
       Modifield: {{post.modified.strftime("%b %d, %Y")}}
     </div>
   </div>
-
   <div class="post-content">
     {{post._render_text | safe}}
   </div>
