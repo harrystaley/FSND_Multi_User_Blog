@@ -4,9 +4,10 @@ import os
 import jinja2
 # import regex lib
 import re
+import random
 import webapp2
 import hmac
-import string
+from string import letters
 
 # import google app engine data store lib
 from google.appengine.ext import db
@@ -78,7 +79,7 @@ def render_str(template, **params):
 # CLASS DEFINITIONS
 class EncryptHandler():
     """ handles basic encryption functions """
-    def hash_str(self, plain_text, salt=None):
+    def hash_cookie_str(self, plain_text, salt=None):
         """ returns the hexdigest for a value passed into it """
         if not salt:
             salt = self.make_salt()
@@ -89,7 +90,7 @@ class EncryptHandler():
         takes in a string, hasshes and returns the original string concatenated
         with the hashed value of that string.
         """
-        return "%s|%s" % (clear_text, self.hash_str(clear_text))
+        return "%s|%s" % (clear_text, self.hash_cookie_str(clear_text))
 
     def make_salt(self, salt_length=5):
         """ Creates a salt for salting passwords and other hashed values """
