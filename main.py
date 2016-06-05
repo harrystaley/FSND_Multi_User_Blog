@@ -31,7 +31,6 @@ TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), 'templates')
 # with user input markup automatically escaped
 JINJA_ENV = jinja2.Environment(loader=jinja2.FileSystemLoader(TEMPLATE_DIR),
                                autoescape=True)
-COOKIE_SECRET = ''.join(random.choice(letters) for x in xrange(10))
 
 
 # FILE LEVEL FUNCTIONS
@@ -60,9 +59,11 @@ def render_str(template, **params):
 # CLASS DEFINITIONS
 class EncryptHandler():
     """ handles basic encryption functions """
+    COOKIE_SECRET = ''.join(random.choice(letters) for x in xrange(10))
 
     def make_salt(self, salt_length=5):
-        """ Creates a salt for salting passwords and other hashed values """
+        """
+        Creates a salt for salting passwords and other hashed values """
         return ''.join(random.choice(letters)
                        for x in xrange(salt_length))
 
@@ -78,19 +79,19 @@ class EncryptHandler():
 
     def valid_pass_hash(self, name, password, hashed_pass):
         """
-        Checks to see if the password is valid by comparing it to a hash passed
-        into the function.
+        Checks to see if the password is valid by comparing it to a hash
+        passed into the function.
         """
         salt = hashed_pass.split('|')[0]
         return hashed_pass == self.hash_pass(name, password, salt)
 
     def make_secure_cookie(self, clear_text):
         """
-        takes in a string, hasshes and returns the original string concatenated
-        with the hashed value of that string.
+        takes in a string, hasshes and returns the original string
+        concatenated with the hashed value of that string.
         """
         return "%s|%s" % (clear_text,
-                          hmac.new(COOKIE_SECRET,
+                          hmac.new(self.COOKIE_SECRET,
                                    clear_text).hexdigest())
 
     def check_secure_cookie(self, hashed_val):
