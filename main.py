@@ -31,27 +31,8 @@ TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), 'templates')
 # with user input markup automatically escaped
 JINJA_ENV = jinja2.Environment(loader=jinja2.FileSystemLoader(TEMPLATE_DIR),
                                autoescape=True)
-# user signup form validation constants using regex
-USER_RE = re.compile("^[a-zA-Z0-9_-]{3,20}$")
-PASS_RE = re.compile("^.{3,20}$")
-EMAIL_RE = re.compile("^[\S]+@[\S]+.[\S]+$")
-
 
 # FILE LEVEL FUNCTIONS
-
-def valid_username(username):
-    """ validates the user id input by passing it through regex """
-    return username and USER_RE.match(username)
-
-
-def valid_password(password):
-    """ validates the password input by passing it through regex """
-    return password and PASS_RE.match(password)
-
-
-def valid_email(email):
-    """ validates the email input by passing it through regex """
-    return not email or EMAIL_RE.match(email)
 
 
 def blog_key(name='default'):
@@ -252,6 +233,22 @@ class PermaLinkHandler(TemplateHandler):
 
 class UserSignupHandler(TemplateHandler):
     """ This is the hander class for the user sign up page """
+    # user signup form validation constants using regex to validate user input
+    PASS_RE = re.compile("^.{3,20}$")
+    EMAIL_RE = re.compile("^[\S]+@[\S]+.[\S]+$")
+    USER_RE = re.compile("^[a-zA-Z0-9_-]{3,20}$")
+
+    def valid_username(self, username):
+        """ validates the user id input by passing it through regex """
+        return username and self.USER_RE.match(username)
+
+    def valid_password(self, password):
+        """ validates the password input by passing it through regex """
+        return password and self.PASS_RE.match(password)
+
+    def valid_email(self, email):
+        """ validates the email input by passing it through regex """
+        return not email or self.EMAIL_RE.match(email)
 
     def get(self):
         """
@@ -268,16 +265,16 @@ class UserSignupHandler(TemplateHandler):
         verify = self.request.get('verify')
         email = self.request.get('email')
 
-        # dictionary to store error messages and username and email if not valid
+        # dictionary to store error messages, username and email if not valid
         params = dict(username=username, email=email)
 
         # tests for valid username
-        if not valid_username(username):
+        if not self.valid_username(username):
             params['error_username'] = 'Invalid User ID'
             have_error = True
 
         # tests for valid password and password match
-        if not valid_password(password):
+        if not self.valid_password(password):
             params['error_password'] = 'Invalid Password'
             have_error = True
         elif password != verify:
@@ -285,7 +282,7 @@ class UserSignupHandler(TemplateHandler):
             have_error = True
 
         # tests for valid email
-        if not valid_email(email):
+        if not self.valid_email(email):
             params['error_email'] = 'Invalid Email'
             have_error = True
 
