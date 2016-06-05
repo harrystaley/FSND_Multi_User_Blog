@@ -5,6 +5,7 @@ import jinja2
 # import regex lib
 import re
 import webapp2
+import hmac
 
 # import google app engine data store lib
 from google.appengine.ext import db
@@ -71,7 +72,7 @@ class HashHandler():
     def hash_str(self, plain_text):
         """ returns the hexdigest for a value passed into it """
         SALT = 'imsosecret'
-        return self.hmac.new(SALT, plain_text).hexdigest()
+        return hmac.new(SALT, plain_text).hexdigest()
 
     def make_secure_val(self, plain_text):
         """
