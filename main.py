@@ -90,26 +90,27 @@ class EncryptHandler():
         takes in a string, hasshes and returns the original string
         concatenated with the hashed value of that string.
         """
-        return "%s|%s" % (clear_text,
-                          hmac.new(self.COOKIE_SECRET,
-                                   clear_text).hexdigest())
+        if clear_text:
+            return "%s|%s" % (clear_text,
+                              hmac.new(self.COOKIE_SECRET,
+                                       clear_text).hexdigest())
 
     def check_secure_cookie(self, hashed_val):
         """
         takes in a value strips out the original value out of the hash
         and compares it to the  hashed value of the original string
         """
-        val = hashed_val.split('|')[0]
-        if hashed_val == self.make_secure_cookie(val):
-            return val
+        if hashed_val:
+            val = hashed_val.split('|')[0]
+            if hashed_val == self.make_secure_cookie(val):
+                return val
 
 
-class TemplateHandler(webapp2.RequestHandler):
+class TemplateHandler(webapp2.RequestHandler, EncryptHandler):
     """
      TemplateHandler class for all functions in this app for rendering
     any templates.
     """
-
     def write(self, *a, **kw):
         """ displays the respective function, parameters, ect. """
         self.response.out.write(*a, **kw)
@@ -126,6 +127,36 @@ class TemplateHandler(webapp2.RequestHandler):
         Calls render_tmp and write to display the template.
         """
         self.write(self.render_tmp(template, **kw))
+
+    def set_secure_cookie(self, cookie_name, cookie_val):
+        self.response.headers['content-type'] = 'text/plain'
+        cookie_str = self.request.cookies.get(cookie_name)
+        # if cookie_str:
+        cookie_val = self.check_secure_cookie(cookie_str)
+        # checks to see if the string variable vistis is a number
+        # and if it is changes the string to an int and increments it by 1
+        new_cookie_val = self.make_secure_cookie(str(cookie_val))
+
+        return self.response.headers.add_header('set-cookie', '%s=%s; path=/' %
+                                                (cookie_name, new_cookie_val))
+
+    def get_secure_cookie_val(self, cookie_name):
+        self.response.headers['content-type'] = 'text/plain'
+        cookie_str = self.request.cookies.get(cookie_name)
+        cookie_val = self.check_secure_cookie(cookie_str)
+        return cookie_val
+
+    def set_user_cookie(self, username):
+        self.response.headers['Content Type'] = 'text/plain'
+        user_cookie_str = self.request.cookies.get('user_id')
+        if user_cookie_str:
+            user_cookie_val = self.check_secure_cookie(user_cookie_str)
+            if user_cookie_val:
+                new_cookie_val = self.make_secure_cookie(username)
+                # sets the value of visits in the cookie to the variable visits
+                self.response.headers.add_header('set-cookie',
+                                                 'username=%s; path=/'
+                                                 % (new_cookie_val))
 
 
 class Post(db.Model):
@@ -148,6 +179,12 @@ class Post(db.Model):
         return render_str("post.html", post=self)
 
 
+class User(db.Model):
+    username = db.StringProperty(required=True)
+    pass_hash = db.StringProperty(required=True)
+    email = db.StringProperty()
+
+
 class MainPage(TemplateHandler):
     """ This is the handler class for the main page for the blog. """
 
@@ -156,34 +193,32 @@ class MainPage(TemplateHandler):
         queries the database for the 10 most recent
         blog posts and orders them descending
         """
+        # pagename = 'frontvisits'
+        # visits = self.get_secure_cookie_val(pagename)
+        # if visits and visits.isdigit():
+        #     visits += 1
+        # else:
+        #     visits = 0
+        # self.set_secure_cookie(pagename, visits)
         posts = db.GqlQuery("SELECT * FROM Post "
                             "ORDER BY created DESC LIMIT 10")
         self.render("front.html", posts=posts)
 
 
-class NewPostHandler(TemplateHandler, EncryptHandler):
+class NewPostHandler(TemplateHandler):
     """ This is the handler class for the new blog post page """
     def get(self):
         """
         uses GET request to render newpost.html by calling render from the
         TemplateHandler class
         """
-        # sets a cookie that tracks then number of visits to NewPost.html
-        self.response.headers['Content Type'] = 'text/plain'
-        visits = 0
-        visits_cookie_str = self.request.cookies.get('visits')
-        if visits_cookie_str:
-            visits_cookie_val = self.check_secure_cookie(visits_cookie_str)
-            # checks to see if the string variable vistis is a number
-            # and if it is changes the string to an int and increments it by 1
-            if visits_cookie_val and visits_cookie_val.isdigit():
-                visits = int(visits_cookie_val) + 1
-            else:
-                visits = 0
-        new_cookie_val = self.make_secure_cookie(str(visits))
-        # sets the value of visits in the cookie to the variable visits
-        self.response.headers.add_header('set-cookie',
-                                         'visits=%s' % new_cookie_val)
+        pagename = 'newpostvisits'
+        visits = self.get_secure_cookie_val(pagename)
+        if visits and visits.isdigit():
+            visits += 1
+        else:
+            visits = 0
+        self.set_secure_cookie(pagename, visits)
         self.render("newpost.html", visits=visits)
 
     def post(self):
@@ -229,7 +264,7 @@ class PermaLinkHandler(TemplateHandler):
             self.render("permalink.html", post=perma_post)
 
 
-class UserSignupHandler(TemplateHandler):
+class UserSignupHandler(TemplateHandler, EncryptHandler):
     """ This is the hander class for the user sign up page """
     # user signup form validation constants using regex to validate user input
     PASS_RE = re.compile("^.{3,20}$")
@@ -289,18 +324,19 @@ class UserSignupHandler(TemplateHandler):
         if have_error:
             self.render("signup.html", **params)
         else:
-            self.redirect('/welcome?username=' + username)
+            self.set_user_cookie(username)
+            self.redirect('welcome.html')
 
 
 class WelcomeHandler(TemplateHandler):
     """ This is the handler class for the welcome page """
     def get(self):
         """ handles the GET request for welcome.html """
-        user_name = self.request.get('username')
+        user_name = self.request.cookies.get('username')
         # If username is valid render the welcome page by calling
         # render from TemplateHandler class.
-        if valid_username(user_name):
-            self.render("welcome.html", username=user_name)
+        if self.valid_username(user_name):
+            self.render("welcome.html/username=", username=user_name)
 
 
 # GAE APPLICATION VARIABLE
