@@ -6,7 +6,7 @@ import jinja2
 import re
 import webapp2
 import hmac
-import text
+import string
 
 # import google app engine data store lib
 from google.appengine.ext import db
@@ -38,9 +38,9 @@ EMAIL_RE = re.compile("^[\S]+@[\S]+.[\S]+$")
 
 # FILE LEVEL FUNCTIONS
 
-def valid_user_id(user_id):
+def valid_username(username):
     """ validates the user id input by passing it through regex """
-    return user_id and USER_RE.match(user_id)
+    return username and USER_RE.match(username)
 
 
 def valid_password(password):
@@ -76,7 +76,7 @@ def render_str(template, **params):
 
 
 # CLASS DEFINITIONS
-class EncryptHandler(text.letters):
+class EncryptHandler(string.letters):
     """ handles basic encryption functions """
     def hash_str(self, plain_text, salt=None):
         """ returns the hexdigest for a value passed into it """
@@ -93,17 +93,17 @@ class EncryptHandler(text.letters):
 
     def make_salt(self, salt_length=5):
         """ Creates a salt for salting passwords and other hashed values """
-        return ''.self.join(random.choice(letters)
+        return ''.join(random.choice(letters)
                             for x in xrange(salt_length))
 
-    def hash_pass(self, user_id, password, salt=None):
+    def hash_pass(self, username, password, salt=None):
         """
         if a password salt does not exist create one, otherwise hash the
         user data .
         """
         if not salt:
             salt = self.make_salt()
-        hashed_pass = hmac.new(user_id + password + salt).hexdigest()
+        hashed_pass = hmac.new(username + password + salt).hexdigest()
         return '%s|%s' % (salt, hashed_pass)
 
     def valid_pass_hash(self, name, password, hashed_pass):
@@ -262,25 +262,25 @@ class UserSignupHandler(TemplateHandler):
     def post(self):
         """ handles the POST request from signup.html """
         have_error = False
-        user_id = self.request.get('user_id')
-        password_1 = self.request.get('password_1')
-        password_2 = self.request.get('password_2')
+        username = self.request.get('username')
+        password = self.request.get('password')
+        verify = self.request.get('verify')
         email = self.request.get('email')
 
-        # dictionary to store error messages and user_id and email if not valid
-        params = dict(user_id=user_id, email=email)
+        # dictionary to store error messages and username and email if not valid
+        params = dict(username=username, email=email)
 
-        # tests for valid user_id
-        if not valid_user_id(user_id):
-            params['error_user_id'] = 'Invalid User ID'
+        # tests for valid username
+        if not valid_username(username):
+            params['error_username'] = 'Invalid User ID'
             have_error = True
 
         # tests for valid password and password match
-        if not valid_password(password_1):
-            params['error_password_1'] = 'Invalid Password'
+        if not valid_password(password):
+            params['error_password'] = 'Invalid Password'
             have_error = True
-        elif password_1 != password_2:
-            params['error_password_2'] = 'Passwords do not Match'
+        elif password != verify:
+            params['error_verify'] = 'Passwords do not Match'
             have_error = True
 
         # tests for valid email
@@ -293,18 +293,18 @@ class UserSignupHandler(TemplateHandler):
         if have_error:
             self.render("signup.html", **params)
         else:
-            self.redirect('/welcome?user_id=' + user_id)
+            self.redirect('/welcome?username=' + username)
 
 
 class WelcomeHandler(TemplateHandler):
     """ This is the handler class for the welcome page """
     def get(self):
         """ handles the GET request for welcome.html """
-        user_name = self.request.get('user_id')
-        # If user_id is valid render the welcome page by calling
+        user_name = self.request.get('username')
+        # If username is valid render the welcome page by calling
         # render from TemplateHandler class.
-        if valid_user_id(user_name):
-            self.render("welcome.html", user_id=user_name)
+        if valid_username(user_name):
+            self.render("welcome.html", username=user_name)
 
 
 # GAE APPLICATION VARIABLE
