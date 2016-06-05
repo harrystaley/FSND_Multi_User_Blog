@@ -6,6 +6,7 @@ import jinja2
 import re
 import webapp2
 import hmac
+import text
 
 # import google app engine data store lib
 from google.appengine.ext import db
@@ -67,7 +68,7 @@ def render_str(template, **params):
 
 
 # CLASS DEFINITIONS
-class HashHandler():
+class EncryptHandler(text.letters):
     """ handles basic encryption functions """
     def hash_str(self, plain_text):
         """ returns the hexdigest for a value passed into it """
@@ -80,6 +81,14 @@ class HashHandler():
         with the hashed value of that string.
         """
         return "%s|%s" % (plain_text, self.hash_str(plain_text))
+
+    def make_salt(self, salt_length=5):
+        """ Creates a salt for salting passwords and other hashed values """
+        return ''.self.join(random.choice(letters)
+                            for x in xrange(salt_length))
+
+    def hash_pass(user_id, password, salt=None):
+
 
     def check_secure_val(self, hashed_val):
         """
@@ -148,7 +157,7 @@ class MainPage(TemplateHandler):
         self.render("front.html", posts=posts)
 
 
-class NewPostHandler(TemplateHandler, HashHandler):
+class NewPostHandler(TemplateHandler, EncryptHandler):
     """ This is the handler class for the new blog post page """
     def get(self):
         """
