@@ -25,8 +25,9 @@ handlers:
   script: main.WSGI_APP
 
 libraries:
+- name: webapp2
+  version: latest
+
 - name: jinja2
   version: latest
 
-- name: string
-  version: latest
