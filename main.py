@@ -61,6 +61,14 @@ def blog_key(name='default'):
     return db.Key.from_path('blogs', name)
 
 
+def user_key(group='default'):
+    """
+    This is the key that defines a user group and facilitates
+    multiple groups on the same site.
+    """
+    return db.Key.from_path('users', group)
+
+
 def render_str(template, **params):
     """ Gets the template and passes it with paramanters. """
     tmp = JINJA_ENV.get_template(template)
@@ -70,33 +78,49 @@ def render_str(template, **params):
 # CLASS DEFINITIONS
 class EncryptHandler(text.letters):
     """ handles basic encryption functions """
-    def hash_str(self, plain_text):
+    def hash_str(self, plain_text, salt=None):
         """ returns the hexdigest for a value passed into it """
-        SALT = 'imsosecret'
-        return hmac.new(SALT, plain_text).hexdigest()
+        if not salt:
+            salt = self.make_salt()
+        return hmac.new(salt, plain_text).hexdigest()
 
-    def make_secure_val(self, plain_text):
+    def make_secure_cookie(self, clear_text):
         """
         takes in a string, hasshes and returns the original string concatenated
         with the hashed value of that string.
         """
-        return "%s|%s" % (plain_text, self.hash_str(plain_text))
+        return "%s|%s" % (clear_text, self.hash_str(clear_text))
 
     def make_salt(self, salt_length=5):
         """ Creates a salt for salting passwords and other hashed values """
         return ''.self.join(random.choice(letters)
                             for x in xrange(salt_length))
 
-    def hash_pass(user_id, password, salt=None):
+    def hash_pass(self, user_id, password, salt=None):
+        """
+        if a password salt does not exist create one, otherwise hash the
+        user data .
+        """
+        if not salt:
+            salt = self.make_salt()
+        hashed_pass = hmac.new(user_id + password + salt).hexdigest()
+        return '%s|%s' % (salt, hashed_pass)
 
+    def valid_pass_hash(self, name, password, hashed_pass):
+        """
+        Checks to see if the password is valid by comparing it to a hash passed
+        into the function.
+        """
+        salt = self.hashed_pass.split('|')[0]
+        return hashed_pass == self.hash_pass(name, password, salt)
 
-    def check_secure_val(self, hashed_val):
+    def check_secure_cookie(self, hashed_val):
         """
         takes in a value strips out the original value out of the hash
         and compares it to the  hashed value of the original string
         """
         val = hashed_val.split('|')[0]
-        if hashed_val == self.make_secure_val(val):
+        if hashed_val == self.make_secure_cookie(val):
             return val
 
 
@@ -169,14 +193,14 @@ class NewPostHandler(TemplateHandler, EncryptHandler):
         visits = 0
         visits_cookie_str = self.request.cookies.get('visits')
         if visits_cookie_str:
-            visits_cookie_val = self.check_secure_val(visits_cookie_str)
+            visits_cookie_val = self.check_secure_cookie(visits_cookie_str)
             # checks to see if the string variable vistis is a number
             # and if it is changes the string to an int and increments it by 1
             if visits_cookie_val and visits_cookie_val.isdigit():
                 visits = int(visits_cookie_val) + 1
             else:
                 visits = 0
-        new_cookie_val = self.make_secure_val(str(visits))
+        new_cookie_val = self.make_secure_cookie(str(visits))
         # sets the value of visits in the cookie to the variable visits
         self.response.headers.add_header('set-cookie',
                                          'visits=%s' % new_cookie_val)
