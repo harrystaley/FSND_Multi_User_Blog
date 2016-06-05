@@ -76,7 +76,7 @@ def render_str(template, **params):
 
 
 # CLASS DEFINITIONS
-class EncryptHandler(string.letters):
+class EncryptHandler():
     """ handles basic encryption functions """
     def hash_str(self, plain_text, salt=None):
         """ returns the hexdigest for a value passed into it """
