@@ -5,6 +5,8 @@ import jinja2
 # import regex lib
 import re
 import webapp2
+# imports hasing library
+import hashlib
 
 # import google app engine data store lib
 from google.appengine.ext import db
@@ -66,6 +68,28 @@ def render_str(template, **params):
 
 
 # CLASS DEFINITIONS
+class HashHandler():
+    """ handles basic encryption functions """
+    def hash_str(self, s):
+        """ returns the hexdigest for a value passed into it """
+        return hashlib.md5(s).hexdigest()
+
+    def make_secure_val(self, s):
+        """
+        takes in a string, hasshes and returns the original string concatenated
+        with the hashed value of that string.
+        """
+        return "%s|%s" % (s, self.hash_str(s))
+
+    def check_secure_val(self, h):
+        """
+        takes in a value strips out the original value out of the hash
+        and compares it to the  hashed value of the original string
+        """
+        val = h.split('|')[0]
+        if h == self.make_secure_val(val):
+            return val
+
 
 class TemplateHandler(webapp2.RequestHandler):
     """
@@ -124,7 +148,7 @@ class MainPage(TemplateHandler):
         self.render("front.html", posts=posts)
 
 
-class NewPostHandler(TemplateHandler):
+class NewPostHandler(TemplateHandler, HashHandler):
     """ This is the handler class for the new blog post page """
     def get(self):
         """
@@ -133,15 +157,20 @@ class NewPostHandler(TemplateHandler):
         """
         # sets a cookie that tracks then number of visits to NewPost.html
         self.response.headers['Content Type'] = 'text/plain'
-        visits = self.request.cookies.get('visits', '0')
-        # checks to see if the string variable vistis is a number
-        # and if it is changes the string to an int and increments it by 1
-        if visits.isdigit():
-            visits = int(visits) + 1
-        else:
-            visits = 0
+        visits = 0
+        visits_cookie_str = self.request.cookies.get('visits')
+        if visits_cookie_str:
+            visits_cookie_val = self.check_secure_val(visits_cookie_str)
+            # checks to see if the string variable vistis is a number
+            # and if it is changes the string to an int and increments it by 1
+            if visits_cookie_val and visits_cookie_val.isdigit():
+                visits = int(visits_cookie_val) + 1
+            else:
+                visits = 0
+        new_cookie_val = self.make_secure_val(str(visits))
         # sets the value of visits in the cookie to the variable visits
-        self.response.headers.add_header('set-cookie', 'visits=%s' % visits)
+        self.response.headers.add_header('set-cookie',
+                                         'visits=%s' % new_cookie_val)
         self.render("newpost.html", visits=visits)
 
     def post(self):
