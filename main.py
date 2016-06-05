@@ -31,10 +31,10 @@ TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), 'templates')
 # with user input markup automatically escaped
 JINJA_ENV = jinja2.Environment(loader=jinja2.FileSystemLoader(TEMPLATE_DIR),
                                autoescape=True)
+COOKIE_SECRET = ''.join(random.choice(letters) for x in xrange(10))
+
 
 # FILE LEVEL FUNCTIONS
-
-
 def blog_key(name='default'):
     """
     This is the key that defines a single blog and facilitiate multiple
@@ -60,23 +60,11 @@ def render_str(template, **params):
 # CLASS DEFINITIONS
 class EncryptHandler():
     """ handles basic encryption functions """
-    def hash_cookie_str(self, plain_text, salt=None):
-        """ returns the hexdigest for a value passed into it """
-        if not salt:
-            salt = self.make_salt()
-        return hmac.new(salt, plain_text).hexdigest()
-
-    def make_secure_cookie(self, clear_text):
-        """
-        takes in a string, hasshes and returns the original string concatenated
-        with the hashed value of that string.
-        """
-        return "%s|%s" % (clear_text, self.hash_cookie_str(clear_text))
 
     def make_salt(self, salt_length=5):
         """ Creates a salt for salting passwords and other hashed values """
         return ''.join(random.choice(letters)
-                            for x in xrange(salt_length))
+                       for x in xrange(salt_length))
 
     def hash_pass(self, username, password, salt=None):
         """
@@ -93,8 +81,17 @@ class EncryptHandler():
         Checks to see if the password is valid by comparing it to a hash passed
         into the function.
         """
-        salt = self.hashed_pass.split('|')[0]
+        salt = hashed_pass.split('|')[0]
         return hashed_pass == self.hash_pass(name, password, salt)
+
+    def make_secure_cookie(self, clear_text):
+        """
+        takes in a string, hasshes and returns the original string concatenated
+        with the hashed value of that string.
+        """
+        return "%s|%s" % (clear_text,
+                          hmac.new(COOKIE_SECRET,
+                                   clear_text).hexdigest())
 
     def check_secure_cookie(self, hashed_val):
         """
