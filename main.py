@@ -6,6 +6,7 @@ import jinja2
 import re
 import random
 import webapp2
+import hashlib
 import hmac
 from string import letters
 
@@ -74,7 +75,7 @@ class EncryptHandler():
         """
         if not salt:
             salt = self.make_salt()
-        hashed_pass = hmac.new(username + password + salt).hexdigest()
+        hashed_pass = hashlib.sha256(username + password + salt).hexdigest()
         return '%s|%s' % (salt, hashed_pass)
 
     def valid_pass_hash(self, name, password, hashed_pass):
