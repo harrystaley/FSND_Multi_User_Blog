@@ -5,8 +5,6 @@ import jinja2
 # import regex lib
 import re
 import webapp2
-# imports hasing library
-import hashlib
 
 # import google app engine data store lib
 from google.appengine.ext import db
@@ -72,7 +70,8 @@ class HashHandler():
     """ handles basic encryption functions """
     def hash_str(self, plain_text):
         """ returns the hexdigest for a value passed into it """
-        return hashlib.md5(plain_text).hexdigest()
+        SALT = 'imsosecret'
+        return self.hmac.new(SALT, plain_text).hexdigest()
 
     def make_secure_val(self, plain_text):
         """
