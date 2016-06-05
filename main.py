@@ -70,24 +70,24 @@ def render_str(template, **params):
 # CLASS DEFINITIONS
 class HashHandler():
     """ handles basic encryption functions """
-    def hash_str(self, s):
+    def hash_str(self, plain_text):
         """ returns the hexdigest for a value passed into it """
-        return hashlib.md5(s).hexdigest()
+        return hashlib.md5(plain_text).hexdigest()
 
-    def make_secure_val(self, s):
+    def make_secure_val(self, plain_text):
         """
         takes in a string, hasshes and returns the original string concatenated
         with the hashed value of that string.
         """
-        return "%s|%s" % (s, self.hash_str(s))
+        return "%s|%s" % (plain_text, self.hash_str(plain_text))
 
-    def check_secure_val(self, h):
+    def check_secure_val(self, hashed_val):
         """
         takes in a value strips out the original value out of the hash
         and compares it to the  hashed value of the original string
         """
-        val = h.split('|')[0]
-        if h == self.make_secure_val(val):
+        val = hashed_val.split('|')[0]
+        if hashed_val == self.make_secure_val(val):
             return val
 
 
