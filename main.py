@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
-# import jinja2 lib
-import jinja2
+
 # import regex lib
 import re
 import random
@@ -9,6 +8,9 @@ import webapp2
 import hashlib
 import hmac
 from string import letters
+
+# import jinja2 lib
+import jinja2
 
 # import google app engine data store lib
 from google.appengine.ext import db
@@ -86,69 +88,16 @@ class EncryptHandler():
         salt = hashed_pass.split('|')[0]
         return hashed_pass == self.hash_pass(name, password, salt)
 
-    def make_secure_cookie(self, clear_text):
-        """
-        takes in a string, hasshes and returns the original string
-        concatenated with the hashed value of that string.
-        """
-        if clear_text:
-            return "%s|%s" % (clear_text,
-                              hmac.new(self.COOKIE_SECRET,
-                                       clear_text).hexdigest())
+    def make_secure_val(self, val):
+        return '%s|%s' % (val, hmac.new(self.COOKIE_SECRET, val).hexdigest())
 
-    def check_secure_cookie(self, hashed_val):
-        """
-        takes in a value strips out the original value out of the hash
-        and compares it to the  hashed value of the original string
-        """
-        if hashed_val:
-            val = hashed_val.split('|')[0]
-            if hashed_val == self.make_secure_cookie(val):
-                return val
+    def check_secure_val(self, secure_val):
+        val = secure_val.split('|')[0]
+        if secure_val == self.make_secure_val(val):
+            return val
 
 
-class CookieHandler(webapp2.RequestHandler, EncryptHandler):
-    def set_secure_cookie(self, cookie_name, cookie_val):
-        self.response.headers['content-type'] = 'text/plain'
-        cookie_str = self.request.cookies.get(cookie_name)
-        # if cookie_str:
-        cookie_val = self.check_secure_cookie(cookie_str)
-        # checks to see if the string variable vistis is a number
-        # and if it is changes the string to an int and increments it by 1
-        new_cookie_val = self.make_secure_cookie(str(cookie_val))
-
-        return self.response.headers.add_header('set-cookie', '%s=%s; path=/' %
-                                                (cookie_name, new_cookie_val))
-
-    def get_secure_cookie_val(self, cookie_name):
-        self.response.headers['content-type'] = 'text/plain'
-        cookie_str = self.request.cookies.get(cookie_name)
-        cookie_val = self.check_secure_cookie(cookie_str)
-        return cookie_val
-
-    def set_visits_cookie(self, pagename):
-        visits = self.get_secure_cookie_val(pagename)
-        if visits and visits.isdigit():
-            visits = int(visits) + 1
-        else:
-            visits = 0
-        self.set_secure_cookie(pagename, visits)
-        return visits
-
-    def set_user_cookie(self, username):
-        self.response.headers['Content Type'] = 'text/plain'
-        user_cookie_str = self.request.cookies.get('user_id')
-        if user_cookie_str:
-            user_cookie_val = self.check_secure_cookie(user_cookie_str)
-            if user_cookie_val:
-                new_cookie_val = self.make_secure_cookie(username)
-                # sets the value of visits in the cookie to the variable visits
-                self.response.headers.add_header('set-cookie',
-                                                 'username=%s; path=/'
-                                                 % (new_cookie_val))
-
-
-class TemplateHandler(webapp2.RequestHandler):
+class TemplateHandler(webapp2.RequestHandler, EncryptHandler):
     """
      TemplateHandler class for all functions in this app for rendering
     any templates.
@@ -169,6 +118,16 @@ class TemplateHandler(webapp2.RequestHandler):
         Calls render_tmp and write to display the template.
         """
         self.write(self.render_tmp(template, **kw))
+
+    def set_secure_cookie(self, name, val):
+        cookie_val = self.make_secure_val(val)
+        self.response.headers.add_header(
+            'Set-Cookie',
+            '%s=%s; Path=/' % (name, cookie_val))
+
+    def get_secure_cookie(self, name):
+        cookie_val = self.request.cookies.get(name)
+        return cookie_val and self.check_secure_val(cookie_val)
 
 
 class Post(db.Model):
@@ -205,28 +164,19 @@ class MainPage(TemplateHandler):
         queries the database for the 10 most recent
         blog posts and orders them descending
         """
-        # pagename = 'frontvisits'
-        # visits = self.get_secure_cookie_val(pagename)
-        # if visits and visits.isdigit():
-        #     visits += 1
-        # else:
-        #     visits = 0
-        # self.set_secure_cookie(pagename, visits)
         posts = db.GqlQuery("SELECT * FROM Post "
                             "ORDER BY created DESC LIMIT 10")
         self.render("front.html", posts=posts)
 
 
-class NewPostHandler(TemplateHandler, CookieHandler):
+class NewPostHandler(TemplateHandler):
     """ This is the handler class for the new blog post page """
     def get(self):
         """
         uses GET request to render newpost.html by calling render from the
         TemplateHandler class
         """
-        pagename = 'newpostvisits'
-        visits = self.set_visits_cookie(pagename)
-        self.render("newpost.html", visits=visits)
+        self.render("newpost.html")
 
     def post(self):
         """
