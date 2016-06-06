@@ -34,6 +34,7 @@ TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), 'templates')
 # with user input markup automatically escaped
 JINJA_ENV = jinja2.Environment(loader=jinja2.FileSystemLoader(TEMPLATE_DIR),
                                autoescape=True)
+COOKIE_SECRET = ''.join(random.choice(letters) for x in xrange(10))
 
 
 # FILE LEVEL FUNCTIONS
@@ -62,7 +63,6 @@ def render_str(template, **params):
 # CLASS DEFINITIONS
 class EncryptHandler():
     """ handles basic encryption functions """
-    COOKIE_SECRET = ''.join(random.choice(letters) for x in xrange(10))
 
     def make_salt(self, salt_length=5):
         """
