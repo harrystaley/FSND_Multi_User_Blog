@@ -24,6 +24,7 @@ __version__ = "1.0"
 # from webapp2. Info on webapp2 framework can be found at:
 # https://cloud.google.com/appengine/docs/python/gettingstartedpython27/usingwebapp#hello-webapp2
 
+# TODO: store COOKIE_SECRET in a different file.
 
 # FILE LEVEL VARIABLES/CONSTANTS
 
@@ -62,7 +63,6 @@ def render_str(template, **params):
 # CLASS DEFINITIONS
 class EncryptHandler():
     """ handles basic encryption functions """
-
     def make_salt(self, salt_length=5):
         """
         Creates a salt for salting passwords and other hashed values """
@@ -170,7 +170,6 @@ class User(db.Model):
 
 class MainPage(TemplateHandler):
     """ This is the handler class for the main page for the blog. """
-
     def get(self):
         """
         queries the database for the 10 most recent
