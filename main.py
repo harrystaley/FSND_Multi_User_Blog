@@ -294,7 +294,7 @@ class UserSignupHandler(TemplateHandler, EncryptHandler):
             self.render("signup.html", **params)
         else:
             self.set_secure_cookie('usercookie', username)
-            self.redirect('welcome.html')
+            self.redirect('/welcome')
 
 
 class WelcomeHandler(TemplateHandler):
