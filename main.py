@@ -26,6 +26,8 @@ __version__ = "1.0"
 
 # TODO: store COOKIE_SECRET in a different file.
 
+# TODO: fix bug where the email address is not passing into the dictionary.
+
 # FILE LEVEL VARIABLES/CONSTANTS
 
 # sets the locaiton of the templates folder contained in the home of this file.
@@ -35,6 +37,10 @@ TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), 'templates')
 JINJA_ENV = jinja2.Environment(loader=jinja2.FileSystemLoader(TEMPLATE_DIR),
                                autoescape=True)
 COOKIE_SECRET = 'secret'
+# REGEX FOR SIGNUP FORM
+EMAIL_RE = re.compile(r"^[\S]+@[\S]+.[\S]$")
+USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
+PASS_RE = re.compile(r"^.{3,20}$")
 
 
 # FILE LEVEL FUNCTIONS
@@ -236,21 +242,17 @@ class UserSignupHandler(TemplateHandler, EncryptHandler):
     """ This is the hander class for the user sign up page """
     # user signup form validation constants using a string literal regex to
     # validate user input
-    PASS_RE = re.compile(r'^.{3,20}$')
-    EMAIL_RE = re.compile(r'^[\S]+@[\S]+.[\S]+$')
-    USER_RE = re.compile(r'^[a-zA-Z0-9_-]{3,20}$')
-
     def valid_username(self, username):
         """ validates the user id input by passing it through regex """
-        return username and self.USER_RE.match(username)
+        return username and USER_RE.match(username)
 
     def valid_password(self, password):
         """ validates the password input by passing it through regex """
-        return password and self.PASS_RE.match(password)
+        return password and PASS_RE.match(password)
 
     def valid_email(self, email):
         """ validates the email input by passing it through regex """
-        return email and self.EMAIL_RE.match(email)
+        return not email or EMAIL_RE.match(email)
 
     def get(self):
         """
@@ -268,7 +270,8 @@ class UserSignupHandler(TemplateHandler, EncryptHandler):
         email = self.request.get('email')
 
         # dictionary to store error messages, username and email if not valid
-        params = dict(username=username, email=email)
+        params = dict(username=username,
+                      email=email)
 
         # tests for valid username
         if not self.valid_username(username):
