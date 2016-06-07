@@ -38,7 +38,7 @@ JINJA_ENV = jinja2.Environment(loader=jinja2.FileSystemLoader(TEMPLATE_DIR),
                                autoescape=True)
 COOKIE_SECRET = 'secret'
 # REGEX FOR SIGNUP FORM
-EMAIL_RE = re.compile(r"^[\S]+@[\S]+.[\S]$")
+EMAIL_RE = re.compile(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)")
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
 PASS_RE = re.compile(r"^.{3,20}$")
 
@@ -270,8 +270,7 @@ class UserSignupHandler(TemplateHandler, EncryptHandler):
         email = self.request.get('email')
 
         # dictionary to store error messages, username and email if not valid
-        params = dict(username=username,
-                      email=email)
+        params = dict(username=username, email=email)
 
         # tests for valid username
         if not self.valid_username(username):
