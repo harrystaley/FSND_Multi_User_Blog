@@ -114,17 +114,24 @@ class TemplateHandler(webapp2.RequestHandler, EncryptHandler):
 
     def render(self, template, **kw):
         """
-        Calls render_tmp and write to display the template.
+        Calls render_tmp and write to display the jinja template.
         """
         self.write(self.render_tmp(template, **kw))
 
     def set_secure_cookie(self, name, val):
+        """
+        Method takes in a name and value and creates a cookie.
+        """
         cookie_val = self.make_secure_val(str(val))
         self.response.headers.add_header(
             'Set-Cookie',
             '%s=%s; Path=/' % (name, cookie_val))
 
     def get_secure_cookie(self, name):
+        """
+        Method takes in the name of a cookie and returns its' value.
+        Remember that the value of a cookie will be in plain text format.
+        """
         cookie_val = self.request.cookies.get(name)
         val = self.check_secure_val(cookie_val)
         return val
@@ -132,9 +139,9 @@ class TemplateHandler(webapp2.RequestHandler, EncryptHandler):
 
 class Post(db.Model):
     """
-    Instantiates the class for a kind (table) in the GAE datastor
-    consisting of properties (fields).
-
+    Instantiates a class to store post (entity or row) data for posts
+    (kiind or table) in the datastor consisting of individual atributes
+    of the post (properties or fields).
     """
     subject = db.StringProperty(required=True)
     content = db.TextProperty(required=True)
@@ -151,6 +158,11 @@ class Post(db.Model):
 
 
 class User(db.Model):
+    """
+    Instantiates a class to store user (entity or row) data for users
+    (kiind or table) in the datastor consisting of individual atributes
+    of the user (properties or fields).
+    """
     username = db.StringProperty(required=True)
     pass_hash = db.StringProperty(required=True)
     email = db.StringProperty()
@@ -290,7 +302,7 @@ class WelcomeHandler(TemplateHandler):
     def get(self):
         """ handles the GET request for welcome.html """
         user_name = self.get_secure_cookie('usercookie')
-        # If username is valid render the welcome page by by getting the username
+        # If username is valid render the welcome page passing in the username
         # from the cookie
         self.render("welcome.html", username=user_name)
 
