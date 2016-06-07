@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 
 # import regex lib
@@ -89,7 +88,7 @@ class EncryptHandler():
         return hashed_pass == self.hash_pass(name, password, salt)
 
     def make_secure_val(self, val):
-        return '%s|%s' % (val, hmac.new(self.COOKIE_SECRET, val).hexdigest())
+        return '%s|%s' % (val, hmac.new(COOKIE_SECRET, val).hexdigest())
 
     def check_secure_val(self, secure_val):
         val = secure_val.split('|')[0]
@@ -120,14 +119,15 @@ class TemplateHandler(webapp2.RequestHandler, EncryptHandler):
         self.write(self.render_tmp(template, **kw))
 
     def set_secure_cookie(self, name, val):
-        cookie_val = self.make_secure_val(val)
+        cookie_val = self.make_secure_val(str(val))
         self.response.headers.add_header(
             'Set-Cookie',
             '%s=%s; Path=/' % (name, cookie_val))
 
     def get_secure_cookie(self, name):
         cookie_val = self.request.cookies.get(name)
-        return cookie_val and self.check_secure_val(cookie_val)
+        val = self.check_secure_val(cookie_val)
+        return val
 
 
 class Post(db.Model):
@@ -281,7 +281,7 @@ class UserSignupHandler(TemplateHandler, EncryptHandler):
         if have_error:
             self.render("signup.html", **params)
         else:
-            self.set_user_cookie(username)
+            self.set_secure_cookie('usercookie', username)
             self.redirect('welcome.html')
 
 
@@ -289,11 +289,10 @@ class WelcomeHandler(TemplateHandler):
     """ This is the handler class for the welcome page """
     def get(self):
         """ handles the GET request for welcome.html """
-        user_name = self.request.cookies.get('username')
-        # If username is valid render the welcome page by calling
-        # render from TemplateHandler class.
-        if self.valid_username(user_name):
-            self.render("welcome.html/username=", username=user_name)
+        user_name = self.get_secure_cookie('usercookie')
+        # If username is valid render the welcome page by by getting the username
+        # from the cookie
+        self.render("welcome.html", username=user_name)
 
 
 # GAE APPLICATION VARIABLE
