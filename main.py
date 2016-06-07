@@ -61,7 +61,7 @@ def render_str(template, **params):
 
 
 # CLASS DEFINITIONS
-class EncryptHandler():
+class EncryptHandler(object):
     """ handles basic encryption functions """
     def make_salt(self, salt_length=5):
         """
@@ -234,10 +234,11 @@ class PermaLinkHandler(TemplateHandler):
 
 class UserSignupHandler(TemplateHandler, EncryptHandler):
     """ This is the hander class for the user sign up page """
-    # user signup form validation constants using regex to validate user input
-    PASS_RE = re.compile(r"^.{3,20}$")
-    EMAIL_RE = re.compile(r"^[\S]+@[\S]+.[\S]+$")
-    USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
+    # user signup form validation constants using a string literal regex to
+    # validate user input
+    PASS_RE = re.compile(r'^.{3,20}$')
+    EMAIL_RE = re.compile(r'^[\S]+@[\S]+.[\S]+$')
+    USER_RE = re.compile(r'^[a-zA-Z0-9_-]{3,20}$')
 
     def valid_username(self, username):
         """ validates the user id input by passing it through regex """
@@ -249,7 +250,7 @@ class UserSignupHandler(TemplateHandler, EncryptHandler):
 
     def valid_email(self, email):
         """ validates the email input by passing it through regex """
-        return not email or self.EMAIL_RE.match(email)
+        return email and self.EMAIL_RE.match(email)
 
     def get(self):
         """
