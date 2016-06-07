@@ -33,7 +33,7 @@ TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), 'templates')
 # with user input markup automatically escaped
 JINJA_ENV = jinja2.Environment(loader=jinja2.FileSystemLoader(TEMPLATE_DIR),
                                autoescape=True)
-COOKIE_SECRET = ''.join(random.choice(letters) for x in xrange(10))
+COOKIE_SECRET = 'secret'
 
 
 # FILE LEVEL FUNCTIONS
