@@ -1,0 +1,13 @@
+<!-- JINJA2 CHILD TEMPLATE - FRONT -->
+{% extends "base.html" %}
+
+<!-- THIS IS A MAJOR DEPENDENCY OF THE MULTI-USER BLOG PROJECT
+This template is borrowed from the project answer files in the intro
+to backend course in preparation for the multi-user blog project -->
+
+{% block nav %}
+					<li><a href="/newpost">Create New Post</a></li>
+	        <li><a href="/signup">Sign Up</a></li>
+	        <li><a href="/login">Login</a></li>
+	        <li><a href="/logout">Logout</a></li>
+{% endblock nav %}

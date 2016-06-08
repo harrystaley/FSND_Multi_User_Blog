@@ -34,10 +34,8 @@
       <div class="collapse navbar-collapse" id="Navbar">
 
         <ul class="nav navbar-nav">
-          <li><a href="/newpost">Create New Post</a></li>
-          <li><a href="/signup">Sign Up</a></li>
-          <li><a href="/login">Login</a></li>
-          <li><a href="/logout">Logout</a></li>
+          {% block nav %}
+          {% endblock nav %}
         </ul>
 
       </div>
@@ -60,9 +58,9 @@
     <main>
       <div class="row">
         <div class="col-md-12">
-          <!-- JINJA2 INHERITANCE FOR CHILD TEMPLATES -->
+          <!-- JINJA2 INHERITANCE FOR CHILD CONTENT TEMPLATES -->
           {% block content %}
-          {% endblock %}
+          {% endblock content %}
         </div>
       </div>
     </main>
