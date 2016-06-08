@@ -24,18 +24,28 @@
     <nav class="navbar navbar-inverse navbar-fixed-top">
     <div class="container-fluid">
       <div class="navbar-header">
+        <a class="navbar-brand" href="/">Home</a>
         <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#Navbar">
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
         </button>
-        <a class="navbar-brand" href="/">Home</a>
       </div>
       <div class="collapse navbar-collapse" id="Navbar">
 
         <ul class="nav navbar-nav">
-          {% block nav %}
-          {% endblock nav %}
+
+          {% set nav = [
+            ('/newpost', 'Create New Post'),
+            ('/logout', 'Logout'),
+            ('/signup', 'Sign Up'),
+            ('/logout', 'Log Out'),
+            ('/login', 'Log In')
+          ] %}
+          {% for link, title in nav %}
+            <li><a href={{ link }}>{{ title }}</a></li>
+          {% endfor %}
+
         </ul>
 
       </div>

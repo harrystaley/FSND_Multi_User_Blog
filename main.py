@@ -249,7 +249,8 @@ class PermaLinkHandler(TemplateHandler):
             return
         else:
             if self.cookie_exists('usercookie'):
-                self.render("permalink.html", post=perma_post)
+                self.render("permalink.html",
+                            post=perma_post)
             else:
                 self.redirect('/signup')
 
@@ -408,7 +409,8 @@ class WelcomeHandler(TemplateHandler):
         """ handles the GET request for welcome.html """
         if self.cookie_exists('usercookie'):
             user_name = self.get_secure_cookie('usercookie')
-            self.render("welcome.html", username=user_name)
+            self.render("welcome.html",
+                        username=user_name)
         else:
             self.redirect('/signup')
 
