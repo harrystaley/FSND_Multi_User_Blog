@@ -42,6 +42,7 @@ COOKIE_SECRET = 'secret'
 EMAIL_RE = re.compile(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)")
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
 PASS_RE = re.compile(r"^.{3,20}$")
+COOKIE_RE = re.compile(r'^.+=;\s*Path=/$')
 
 
 # FILE LEVEL FUNCTIONS
@@ -143,6 +144,13 @@ class TemplateHandler(webapp2.RequestHandler, EncryptHandler):
         val = self.check_secure_val(cookie_val)
         return val
 
+    def cookie_exists(self, cookiename):
+        """
+        Gets the name of the cookie and validates that it exists and is set.
+        """
+        val = self.get_secure_cookie(cookiename)
+        return val
+
 
 class Post(db.Model):
     """
@@ -195,7 +203,10 @@ class NewPostHandler(TemplateHandler):
         uses GET request to render newpost.html by calling render from the
         TemplateHandler class
         """
-        self.render("newpost.html")
+        if self.cookie_exists('usercookie'):
+            self.render("newpost.html")
+        else:
+            self.redirect('/signup')
 
     def post(self):
         """
@@ -237,7 +248,10 @@ class PermaLinkHandler(TemplateHandler):
             self.error(404)
             return
         else:
-            self.render("permalink.html", post=perma_post)
+            if self.cookie_exists('usercookie'):
+                self.render("permalink.html", post=perma_post)
+            else:
+                self.redirect('/signup')
 
 
 class UserSignUpHandler(TemplateHandler, EncryptHandler):
@@ -361,7 +375,6 @@ class UserLoginHandler(TemplateHandler, EncryptHandler):
         if not self.user_exists(username):
             params['error_username'] = 'User Did Not Exist'
             have_error = True
-            # self.redirect('/signup')
         # tests for valid password and password match
         elif not self.user_auth(username, password):
             params['error_password'] = 'Invalid Password'
@@ -376,14 +389,28 @@ class UserLoginHandler(TemplateHandler, EncryptHandler):
             self.redirect('/welcome')
 
 
+class UserLogoutHandler(TemplateHandler, EncryptHandler):
+    """ logs user out of the application """
+    def get(self):
+        """
+        Uses GET request to redirect to signup as well as destroying
+        the cookie.
+        """
+        self.response.headers.add_header(
+            'Set-Cookie',
+            'usercookie=; Path=/')
+        self.redirect('/signup')
+
+
 class WelcomeHandler(TemplateHandler):
     """ This is the handler class for the welcome page """
     def get(self):
         """ handles the GET request for welcome.html """
-        user_name = self.get_secure_cookie('usercookie')
-        # If username is valid render the welcome page passing in the username
-        # from the cookie
-        self.render("welcome.html", username=user_name)
+        if self.cookie_exists('usercookie'):
+            user_name = self.get_secure_cookie('usercookie')
+            self.render("welcome.html", username=user_name)
+        else:
+            self.redirect('/signup')
 
 
 # GAE APPLICATION VARIABLE
@@ -397,5 +424,6 @@ WSGI_APP = webapp2.WSGIApplication([
     ('/newpost', NewPostHandler),
     ('/signup', UserSignUpHandler),
     ('/login', UserLoginHandler),
+    ('/logout', UserLogoutHandler),
     ('/welcome', WelcomeHandler)
 ], debug=True)
