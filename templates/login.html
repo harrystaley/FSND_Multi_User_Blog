@@ -1,0 +1,26 @@
+<!-- JINJA2 CHILD TEMPLATE -  LOGIN -->
+{% extends "base.html" %}
+
+<!-- THIS IS A MAJOR DEPENDENCY OF THE MULTI-USER BLOG PROJECT
+This template is a part of the problem set in the forms and templates portion
+of the intro to backend course in preparation for the multi-user
+blog project -->
+
+{% block content %}
+
+<!-- TODO: Add more detailed user guidance as to what is expected for passwordsm ect -->
+
+<form action="" method="post" id="SignUpForm">
+	<fieldset class="accountInfo">
+		<legend>User Sign In</legend>
+		<p><label for="Username">User Name</label>
+			<input type="text" name="username" value="{{username}}" placeholder="Required"><span class="error">{{error_username}}</span>
+		<p><label for="password">Password</label>
+			<input type="password" name="password" value="" placeholder="Required"><span class="error">{{error_password}}</span>
+	</fieldset>
+	<fieldset class="accountAction">
+		<input type="submit" class="btn btn-default" name="submit" value="Sign Up">
+	</fieldset>
+</form>
+
+{% endblock %}

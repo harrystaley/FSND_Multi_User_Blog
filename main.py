@@ -240,9 +240,9 @@ class PermaLinkHandler(TemplateHandler):
             self.render("permalink.html", post=perma_post)
 
 
-class UserSignupHandler(TemplateHandler, EncryptHandler):
+class UserSignUpHandler(TemplateHandler, EncryptHandler):
     """ This is the hander class for the user sign up page """
-    # user signup form validation constants using a string literal regex to
+    # user signup form validation constaccccnts using a string literal regex to
     # validate user input
     def valid_username(self, username):
         """ validates the user id input by passing it through regex """
@@ -308,12 +308,70 @@ class UserSignupHandler(TemplateHandler, EncryptHandler):
         if have_error:
             self.render("signup.html", **params)
         else:
-            pass_hash = self.hash_pass(username, password)
+            hashed_pass = self.hash_pass(username, password)
             user = User(parent=user_key(),
                         username=username,
-                        pass_hash=pass_hash,
+                        pass_hash=hashed_pass,
                         email=email)
             user.put()
+            self.set_secure_cookie('usercookie', username)
+            self.redirect('/welcome')
+
+
+class UserLoginHandler(TemplateHandler, EncryptHandler):
+    """ This is the hander class for the user sign up page """
+    def user_exists(self, username):
+        """ validates that the user exists in the database """
+        username_exists = db.GqlQuery("SELECT * "
+                                      "FROM User "
+                                      "WHERE username = :usernm",
+                                      usernm=username).get()
+        return username_exists
+
+    def user_auth(self, username, password):
+        """
+        If the username exists it suthenticates the password of the user
+        """
+        user = db.GqlQuery("SELECT * "
+                           "FROM User "
+                           "WHERE username = :usernm",
+                           usernm=username).get()
+        if user:
+            return self.valid_pass_hash(user.username,
+                                        password,
+                                        user.pass_hash)
+
+    def get(self):
+        """
+        uses GET request to render signup.html by passing signup.html into
+        render from the TemplateHandler class.
+        """
+        self.render("login.html")
+
+    def post(self):
+        """ handles the POST request from signup.html """
+        have_error = False
+        username = self.request.get('username')
+        password = self.request.get('password')
+
+        # dictionary to store error messages, username and email if not valid
+        params = dict(username=username)
+
+        # if the username already exists or it is an error
+        if not self.user_exists(username):
+            params['error_username'] = 'User Did Not Exist'
+            have_error = True
+            # self.redirect('/signup')
+        # tests for valid password and password match
+        elif not self.user_auth(username, password):
+            params['error_password'] = 'Invalid Password'
+            have_error = True
+
+        # if there is an error re-render signup page
+        # else render the welcome page
+        if have_error:
+            self.render("login.html", **params)
+        else:
             self.set_secure_cookie('usercookie', username)
             self.redirect('/welcome')
 
@@ -337,6 +395,7 @@ WSGI_APP = webapp2.WSGIApplication([
     # into PermaPost class via the url using regular expression
     ('/([0-9]+)', PermaLinkHandler),
     ('/newpost', NewPostHandler),
-    ('/signup', UserSignupHandler),
+    ('/signup', UserSignUpHandler),
+    ('/login', UserLoginHandler),
     ('/welcome', WelcomeHandler)
 ], debug=True)
