@@ -86,13 +86,13 @@ class EncryptHandler(object):
         hashed_pass = hashlib.sha256(username + password + salt).hexdigest()
         return '%s|%s' % (salt, hashed_pass)
 
-    def valid_pass_hash(self, name, password, hashed_pass):
+    def valid_pass_hash(self, username, password, hashed_pass):
         """
         Checks to see if the password is valid by comparing it to a hash
         passed into the function.
         """
         salt = hashed_pass.split('|')[0]
-        return hashed_pass == self.hash_pass(name, password, salt)
+        return hashed_pass == self.hash_pass(username, password, salt)
 
     def make_secure_val(self, val):
         return '%s|%s' % (val, hmac.new(COOKIE_SECRET, val).hexdigest())
@@ -182,7 +182,8 @@ class MainPage(TemplateHandler):
         queries the database for the 10 most recent
         blog posts and orders them descending
         """
-        posts = db.GqlQuery("SELECT * FROM Post "
+        posts = db.GqlQuery("SELECT * "
+                            "FROM Post "
                             "ORDER BY created DESC LIMIT 10")
         self.render("front.html", posts=posts)
 
@@ -247,6 +248,14 @@ class UserSignupHandler(TemplateHandler, EncryptHandler):
         """ validates the user id input by passing it through regex """
         return username and USER_RE.match(username)
 
+    def user_exists(self, username):
+        """ validates that the user exists in the database """
+        username_exists = db.GqlQuery("SELECT * "
+                                      "FROM User "
+                                      "WHERE username = :usernm",
+                                      usernm=username).get()
+        return username_exists
+
     def valid_password(self, password):
         """ validates the password input by passing it through regex """
         return password and PASS_RE.match(password)
@@ -273,8 +282,11 @@ class UserSignupHandler(TemplateHandler, EncryptHandler):
         # dictionary to store error messages, username and email if not valid
         params = dict(username=username, email=email)
 
-        # tests for valid username
-        if not self.valid_username(username):
+        # if the username already exists or it is an error
+        if self.user_exists(username):
+            params['error_username_exists'] = 'User Exists'
+            have_error = True
+        elif not self.valid_username(username):
             params['error_username'] = 'Invalid User ID'
             have_error = True
 
@@ -296,6 +308,12 @@ class UserSignupHandler(TemplateHandler, EncryptHandler):
         if have_error:
             self.render("signup.html", **params)
         else:
+            pass_hash = self.hash_pass(username, password)
+            user = User(parent=user_key(),
+                        username=username,
+                        pass_hash=pass_hash,
+                        email=email)
+            user.put()
             self.set_secure_cookie('usercookie', username)
             self.redirect('/welcome')
 
