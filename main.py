@@ -124,7 +124,14 @@ class TemplateHandler(webapp2.RequestHandler, EncryptHandler):
         """
         Calls render_tmp and write to display the jinja template.
         """
-        self.write(self.render_tmp(template, **kw))
+        # Loads the nav for each page from a tuple in the order of link, title.
+        if self.cookie_exists('usercookie'):
+            nav = [('/newpost', 'Create New Post'),
+                   ('/logout', 'Log Out')]
+        else:
+            nav = [('/signup', 'Sign Up'),
+                   ('/login', 'Log In')]
+        self.write(self.render_tmp(template, nav=nav, **kw))
 
     def set_secure_cookie(self, name, val):
         """
