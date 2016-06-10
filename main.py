@@ -221,7 +221,6 @@ class NewPostHandler(TemplateHandler):
         """
         subject_input = self.request.get('subject')
         content_input = self.request.get('content')
-        cookie = 'usercookie'
         # if subject and content exist create an entity (row) in the GAE
         # datastor (database) and redirect to a permanent link to the post
         if subject_input and content_input:
@@ -249,8 +248,8 @@ class PermaLinkHandler(TemplateHandler):
         and renders permalink.html if the blog post exists by
         passing the template into render from the TemplateHandler class.
         """
-        db_key = db.Key.from_path('Post', int(post_id), parent=blog_key())
-        perma_post = db.get(db_key)
+        post_key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        perma_post = db.get(post_key)
 
         if not perma_post:
             self.error(404)
@@ -337,7 +336,8 @@ class UserSignUpHandler(TemplateHandler, EncryptHandler):
                         pass_hash=hashed_pass,
                         email=email)
             user.put()
-            self.set_secure_cookie('usercookie', username)
+            user_id = str(user.key().id())
+            self.set_secure_cookie('usercookie', user_id)
             self.redirect('/welcome')
 
 
@@ -382,7 +382,7 @@ class UserLoginHandler(TemplateHandler, EncryptHandler):
 
         # if the username already exists or it is an error
         if not self.user_exists(username):
-            params['error_username'] = 'User Did Not Exist'
+            params['error_username'] = 'User Does Not Exist'
             have_error = True
         # tests for valid password and password match
         elif not self.user_auth(username, password):
@@ -394,7 +394,12 @@ class UserLoginHandler(TemplateHandler, EncryptHandler):
         if have_error:
             self.render("login.html", **params)
         else:
-            self.set_secure_cookie('usercookie', username)
+            user = db.GqlQuery("SELECT * "
+                               "FROM User "
+                               "WHERE username = :usernm",
+                               usernm=username).get()
+            user_id = str(user.key().id())
+            self.set_secure_cookie('usercookie', user_id)
             self.redirect('/welcome')
 
 
@@ -416,9 +421,13 @@ class WelcomeHandler(TemplateHandler):
     def get(self):
         """ handles the GET request for welcome.html """
         if self.get_secure_cookie('usercookie'):
-            user_name = self.get_secure_cookie('usercookie')
+            user_id = self.get_secure_cookie('usercookie')
+            key = db.Key.from_path('User',
+                                   int(user_id),
+                                   parent=user_key())
+            user = db.get(key)
             self.render("welcome.html",
-                        username=user_name)
+                        username=user.username)
         else:
             self.redirect('/signup')
 
