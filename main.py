@@ -125,7 +125,7 @@ class TemplateHandler(webapp2.RequestHandler, EncryptHandler):
         Calls render_tmp and write to display the jinja template.
         """
         # Loads the nav for each page from a tuple in the order of link, title.
-        if self.cookie_exists('usercookie'):
+        if self.get_secure_cookie('usercookie'):
             nav = [('/newpost', 'Create New Post'),
                    ('/logout', 'Log Out')]
         else:
@@ -142,20 +142,13 @@ class TemplateHandler(webapp2.RequestHandler, EncryptHandler):
             'Set-Cookie',
             '%s=%s; Path=/' % (name, cookie_val))
 
-    def get_secure_cookie(self, name):
+    def get_secure_cookie(self, cookie_name):
         """
         Method takes in the name of a cookie and returns its' value.
         Remember that the value of a cookie will be in plain text format.
         """
-        cookie_val = self.request.cookies.get(name)
+        cookie_val = self.request.cookies.get(cookie_name)
         val = self.check_secure_val(cookie_val)
-        return val
-
-    def cookie_exists(self, cookiename):
-        """
-        Gets the name of the cookie and validates that it exists and is set.
-        """
-        val = self.get_secure_cookie(cookiename)
         return val
 
 
@@ -210,7 +203,7 @@ class NewPostHandler(TemplateHandler):
         uses GET request to render newpost.html by calling render from the
         TemplateHandler class
         """
-        if self.cookie_exists('usercookie'):
+        if self.get_secure_cookie('usercookie'):
             self.render("newpost.html")
         else:
             self.redirect('/signup')
@@ -221,6 +214,7 @@ class NewPostHandler(TemplateHandler):
         """
         subject_input = self.request.get('subject')
         content_input = self.request.get('content')
+        cookie = 'usercookie'
         # if subject and content exist create an entity (row) in the GAE
         # datastor (database) and redirect to a permanent link to the post
         if subject_input and content_input:
@@ -255,7 +249,7 @@ class PermaLinkHandler(TemplateHandler):
             self.error(404)
             return
         else:
-            if self.cookie_exists('usercookie'):
+            if self.get_secure_cookie('usercookie'):
                 self.render("permalink.html",
                             post=perma_post)
             else:
@@ -414,7 +408,7 @@ class WelcomeHandler(TemplateHandler):
     """ This is the handler class for the welcome page """
     def get(self):
         """ handles the GET request for welcome.html """
-        if self.cookie_exists('usercookie'):
+        if self.get_secure_cookie('usercookie'):
             user_name = self.get_secure_cookie('usercookie')
             self.render("welcome.html",
                         username=user_name)
