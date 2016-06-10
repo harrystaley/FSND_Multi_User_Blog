@@ -32,8 +32,6 @@ __version__ = "1.0"
 # TODO: Users can only edit and delete comments they themselves have made.
 # TODO: Logged out users are redirected to the login page when attempting
 # to create, edit, delete, or like a blog post.
-# TODO: change user cookie to get the id from the datastor and not use the
-# text of the user name in the cookie.
 
 # FILE LEVEL VARIABLES/CONSTANTS
 
@@ -420,12 +418,19 @@ class WelcomeHandler(TemplateHandler):
     """ This is the handler class for the welcome page """
     def get(self):
         """ handles the GET request for welcome.html """
+        # if the usercookie exists render the welcome page
+        # otherwise redirect to the signup page.
         if self.get_secure_cookie('usercookie'):
+            # Gets the user id from the cookie
             user_id = self.get_secure_cookie('usercookie')
+            # gets the key for the kind (table)
             key = db.Key.from_path('User',
                                    int(user_id),
                                    parent=user_key())
+            # gets the user data based upon what is passed
+            # from user_id into key
             user = db.get(key)
+            # renders the welcome page passing in the user name
             self.render("welcome.html",
                         username=user.username)
         else:
