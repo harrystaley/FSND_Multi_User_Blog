@@ -23,10 +23,17 @@ __version__ = "1.0"
 # the same name with the post from the RequestHandler class imported
 # from webapp2. Info on webapp2 framework can be found at:
 # https://cloud.google.com/appengine/docs/python/gettingstartedpython27/usingwebapp#hello-webapp2
-
 # TODO: store COOKIE_SECRET in a different file.
-
 # TODO: fix bug where the email address is not passing into the dictionary.
+# TODO: logged in users can edit and delete posts
+# TODO: Users should only be able to like posts once and should not be able
+# to like their own post.
+# TODO: Only signed in users can post comments.
+# TODO: Users can only edit and delete comments they themselves have made.
+# TODO: Logged out users are redirected to the login page when attempting
+# to create, edit, delete, or like a blog post.
+# TODO: change user cookie to get the id from the datastor and not use the
+# text of the user name in the cookie.
 
 # FILE LEVEL VARIABLES/CONSTANTS
 
