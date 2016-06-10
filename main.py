@@ -6,6 +6,7 @@ import random
 import webapp2
 import hashlib
 import hmac
+import datetime
 from string import letters
 
 # import jinja2 lib
@@ -47,7 +48,6 @@ COOKIE_SECRET = 'secret'
 EMAIL_RE = re.compile(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)")
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
 PASS_RE = re.compile(r"^.{3,20}$")
-COOKIE_RE = re.compile(r'^.+=;\s*Path=/$')
 
 
 # FILE LEVEL FUNCTIONS
@@ -104,7 +104,10 @@ class EncryptHandler(object):
         return '%s|%s' % (val, hmac.new(COOKIE_SECRET, val).hexdigest())
 
     def check_secure_val(self, secure_val):
-        val = secure_val.split('|')[0]
+        if secure_val:
+            val = secure_val.split('|')[0]
+        else:
+            val = None
         if secure_val == self.make_secure_val(val):
             return val
 
@@ -142,10 +145,14 @@ class TemplateHandler(webapp2.RequestHandler, EncryptHandler):
         """
         Method takes in a name and value and creates a cookie.
         """
+        # sets cookie that expires after three hours unless refreshed
         cookie_val = self.make_secure_val(str(val))
+        now = datetime.datetime.utcnow()
+        expires = datetime.timedelta(hours=3)
+        exp_date_str = (now + expires).strftime("%a, %d %b %Y %H:%M:%S GMT")
         self.response.headers.add_header(
             'Set-Cookie',
-            '%s=%s; Path=/' % (name, cookie_val))
+            '%s=%s; expires=%s; Path=/' % (name, cookie_val, exp_date_str))
 
     def get_secure_cookie(self, cookie_name):
         """
