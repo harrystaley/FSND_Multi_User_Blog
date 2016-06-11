@@ -1,6 +1,4 @@
 import os
-
-# import regex lib
 import re
 import random
 import webapp2
@@ -9,7 +7,7 @@ import hmac
 import datetime
 from string import letters
 
-# import jinja2 lib
+# import jinja2 lib for templating
 import jinja2
 
 # import google app engine data store lib
@@ -141,18 +139,32 @@ class TemplateHandler(webapp2.RequestHandler, EncryptHandler):
                    ('/login', 'Log In')]
         self.write(self.render_tmp(template, nav=nav, **kw))
 
-    def set_secure_cookie(self, name, val):
+    def set_secure_cookie(self, name, val, exp):
         """
-        Method takes in a name and value and creates a cookie.
+        Method takes in a name, value, and expiration it creates a cookie.
+
+        The name parameter takes in any value and converts it to a string.
+
+        The val parameter takes in any value and converts it to a string.
+
+        The exp parameter takes in integer representing the number of
+        seconds before expiration.
+
+        A null or non integer value in the expiration parameter sets a
+        session cookie.
         """
-        # sets cookie that expires after three hours unless refreshed
+        # sets cookie that expires  after a specified time unless refreshed
+        # a blank value sets a session cookie
         cookie_val = self.make_secure_val(str(val))
-        now = datetime.datetime.utcnow()
-        expires = datetime.timedelta(hours=3)
-        exp_date_str = (now + expires).strftime("%a, %d %b %Y %H:%M:%S GMT")
+        if exp and isinstance(exp, (int, long, float)):
+            now = datetime.datetime.utcnow()
+            expires = datetime.timedelta(seconds=exp)
+            exp_date = (now + expires).strftime("%a, %d %b %Y %H:%M:%S GMT")
+        else:
+            exp_date = ''
         self.response.headers.add_header(
             'Set-Cookie',
-            '%s=%s; expires=%s; Path=/' % (name, cookie_val, exp_date_str))
+            '%s=%s; expires=%s; Path=/' % (name, cookie_val, exp_date))
 
     def get_secure_cookie(self, cookie_name):
         """
@@ -342,7 +354,7 @@ class UserSignUpHandler(TemplateHandler, EncryptHandler):
                         email=email)
             user.put()
             user_id = str(user.key().id())
-            self.set_secure_cookie('usercookie', user_id)
+            self.set_secure_cookie('usercookie', user_id, None)
             self.redirect('/welcome')
 
 
@@ -404,7 +416,7 @@ class UserLoginHandler(TemplateHandler, EncryptHandler):
                                "WHERE username = :usernm",
                                usernm=username).get()
             user_id = str(user.key().id())
-            self.set_secure_cookie('usercookie', user_id)
+            self.set_secure_cookie('usercookie', user_id, None)
             self.redirect('/welcome')
 
 
@@ -415,9 +427,8 @@ class UserLogoutHandler(TemplateHandler, EncryptHandler):
         Uses GET request to redirect to signup as well as destroying
         the cookie.
         """
-        self.response.headers.add_header(
-            'Set-Cookie',
-            'usercookie=; Path=/')
+        # sets the expiration time of the cookie to -1 to destroy it
+        self.set_secure_cookie('usercookie', '', -1)
         self.redirect('/signup')
 
 
