@@ -132,12 +132,26 @@ class TemplateHandler(webapp2.RequestHandler, EncryptHandler):
         """
         # Loads the nav for each page from a tuple in the order of link, title.
         if self.get_secure_cookie('usercookie'):
-            nav = [('/newpost', 'Create New Post'),
+            # Gets the user id from the cookie
+            user_id = self.get_secure_cookie('usercookie')
+            # gets the key for the kind (table)
+            key = db.Key.from_path('User',
+                                   int(user_id),
+                                   parent=user_key())
+            # gets the user data based upon what is passed
+            # from user_id into key
+            user = db.get(key)
+            login_status = "<span>Logged in as: %s  </span>" % (user.username)
+            nav = [('/', 'Home'),
+                   ('/newpost', 'Create New Post'),
                    ('/logout', 'Log Out')]
         else:
-            nav = [('/signup', 'Sign Up'),
+            login_status = ''
+            nav = [('/', 'Home'),
+                   ('/signup', 'Sign Up'),
                    ('/login', 'Log In')]
-        self.write(self.render_tmp(template, nav=nav, **kw))
+        self.write(self.render_tmp(template, login_status=login_status,
+                                   nav=nav, **kw))
 
     def set_secure_cookie(self, name, val, exp):
         """
@@ -219,6 +233,10 @@ class MainPage(TemplateHandler):
                             "ORDER BY created DESC LIMIT 10")
         self.render("front.html", posts=posts)
 
+    def post(self):
+        post_id = self.request.get('post_id')
+        self.redirect('/edit?post_id=' + post_id)
+
 
 class NewPostHandler(TemplateHandler):
     """ This is the handler class for the new blog post page """
@@ -277,6 +295,10 @@ class PermaLinkHandler(TemplateHandler):
                             post=perma_post)
             else:
                 self.redirect('/signup')
+
+    def post(self):
+        post_id = self.request.get('post_id')
+        self.redirect('/edit?post_id=' + post_id)
 
 
 class UserSignUpHandler(TemplateHandler, EncryptHandler):
@@ -455,17 +477,67 @@ class WelcomeHandler(TemplateHandler):
             self.redirect('/signup')
 
 
+class EditPost(TemplateHandler):
+    """ Handles the editing of blog posts """
+    def get(self):
+        """ uses get request to get newpost.html """
+        post_id = self.request.get('post_id')
+        key = db.Key.from_path('Post',
+                               int(post_id),
+                               parent=blog_key())
+        # gets the post data based upon what
+        # is passed from post_id into key
+        post = db.get(key)
+        if self.get_secure_cookie('usercookie'):
+            self.render("editpost.html",
+                        subject=post.subject,
+                        content=post.content)
+        else:
+            self.redirect('/signup')
+
+    def post(self):
+        """
+        handles the POST request from newpost.html
+        """
+        post_id = self.request.get('post_id')
+        subject_input = self.request.get('subject')
+        content_input = self.request.get('content')
+        key = db.Key.from_path('Post',
+                               int(post_id),
+                               parent=blog_key())
+        # gets the post data based upon what
+        # is passed from post_id into key
+        # if subject and content exist create an entity (row) in the GAE
+        # datastor (database) and redirect to a permanent link to the post
+        if subject_input and content_input:
+            post = db.get(key)
+            post = Post(parent=blog_key(),
+                        subject=subject_input,
+                        content=content_input)
+            post.put()
+            # redirects to a single blog post passing the post id
+            # from the function as a string to a pagewhere the post_id
+            # is the url
+            post_id = str(post.key().id())
+            self.redirect('/%s' % post_id)
+        else:
+            input_error = "Please submit both the title and the post content. "
+            self.render("editpost.html", subject=subject_input,
+                        content=content_input,
+                        error=input_error, post_id=post_id)
+
+
 # GAE APPLICATION VARIABLE
 # This variable sets the atributes of the individual HTML
 # files that will be served using google app engine.
-WSGI_APP = webapp2.WSGIApplication([
-    ('/?', MainPage),
-    # '/([0-9]+)' recieves post_id from NewPostHandler class passing it
-    # into PermaPost class via the url using regular expression
-    ('/([0-9]+)', PermaLinkHandler),
-    ('/newpost', NewPostHandler),
-    ('/signup', UserSignUpHandler),
-    ('/login', UserLoginHandler),
-    ('/logout', UserLogoutHandler),
-    ('/welcome', WelcomeHandler)
-], debug=True)
+# '/([0-9]+)' recieves post_id from NewPostHandler class passing it
+# into PermaPost class via the url using regular expression
+WSGI_APP = webapp2.WSGIApplication([('/?', MainPage),
+                                    ('/([0-9]+)', PermaLinkHandler),
+                                    ('/newpost', NewPostHandler),
+                                    ('/signup', UserSignUpHandler),
+                                    ('/edit', EditPost),
+                                    ('/login', UserLoginHandler),
+                                    ('/logout', UserLogoutHandler),
+                                    ('/welcome', WelcomeHandler)
+                                    ], debug=True)
