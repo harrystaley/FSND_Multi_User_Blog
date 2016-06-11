@@ -16,14 +16,23 @@ extend base.html -->
       Title: {{post.subject}}
     </div>
     <div class="post-date">
-      Created: {{post.created.strftime("%b %d, %Y")}}
+      Created: {{post.created.strftime("%b %d, %Y %H:%M.%S")}}
     </div>
+    {% if not post.created.strftime("%b %d, %Y %H:%M.%S") == post.modified.strftime("%b %d, %Y %H:%M.%S") %}
     <div class="modified-date">
-      Modifield: {{post.modified.strftime("%b %d, %Y")}}
+      Modifield: {{post.modified.strftime("%b %d, %Y %H:%M.%S")}}
     </div>
+    {% endif %}
   </div>
   <div class="post-content">
     {{post._render_text | safe}}
   </div>
+
+  <form action="" method="post" id="EditPostForm">
+    <fieldset class="accountAction">
+      <input type="hidden" name="post_id" value="{{post.key().id()}}">
+      <input type="submit" class="btn btn-default" name="submit" value="submit">
+    </fieldset>
+  </form>
 </div>
-{% endblock %}
+{% endblock content %}
