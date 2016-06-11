@@ -24,7 +24,7 @@ __version__ = "1.0"
 # https://cloud.google.com/appengine/docs/python/gettingstartedpython27/usingwebapp#hello-webapp2
 # TODO: store COOKIE_SECRET in a different file.
 # TODO: fix bug where the email address is not passing into the dictionary.
-# TODO: logged in users can edit and delete posts
+# TODO: logged in users can delete posts
 # TODO: Users should only be able to like posts once and should not be able
 # to like their own post.
 # TODO: Only signed in users can post comments.
@@ -283,21 +283,20 @@ class PermaLinkHandler(TemplateHandler):
         and renders permalink.html if the blog post exists by
         passing the template into render from the TemplateHandler class.
         """
-        post_key = db.Key.from_path('Post', int(post_id), parent=blog_key())
-        perma_post = db.get(post_key)
+        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        post = db.get(key)
 
-        if not perma_post:
+        if not post:
             self.error(404)
             return
         else:
             if self.get_secure_cookie('usercookie'):
                 self.render("permalink.html",
-                            post=perma_post)
+                            post=post)
             else:
                 self.redirect('/signup')
 
-    def post(self):
-        post_id = self.request.get('post_id')
+    def post(self, post_id):
         self.redirect('/edit?post_id=' + post_id)
 
 
@@ -511,9 +510,8 @@ class EditPost(TemplateHandler):
         # datastor (database) and redirect to a permanent link to the post
         if subject_input and content_input:
             post = db.get(key)
-            post = Post(parent=blog_key(),
-                        subject=subject_input,
-                        content=content_input)
+            post.subject = subject_input
+            post.content = content_input
             post.put()
             # redirects to a single blog post passing the post id
             # from the function as a string to a pagewhere the post_id
