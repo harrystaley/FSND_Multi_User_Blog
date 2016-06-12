@@ -9,4 +9,8 @@ to backend course in preparation for the multi-user blog project -->
 
 <!-- renders a single blog post from PermaPost class using render post from post class in in main.py -->
   {{post.render_post(login_id) | safe}}
+  {% for comment in comments %}
+    {{ comment.render_comment(login_id) | safe }}
+    <br><br>
+  {% endfor %}
 {% endblock content%}

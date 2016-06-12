@@ -1,0 +1,42 @@
+
+<!-- THIS IS A MAJOR DEPENDENCY OF THE MULTI-USER BLOG PROJECT
+This template is borrowed from the project files in the intro
+to backend course in preparation for the multi-user blog project -->
+
+<!-- TEMPLATE PURPOSE
+This template renders consists of an individual comment and
+is displayed in permalink.html or front.html pages and does not
+extend base.html -->
+
+{% block content %}
+
+<div class="post">
+  <div class="post-heading">
+    <div class="post-title">
+      Title: {{comment.subject}}
+    </div>
+    <div class="post-author">
+      Author: {{comment.author_id}}
+    </div>
+    <div class="post-date">
+      Created: {{comment.created.strftime("%b %d, %Y %H:%M.%S")}}
+    </div>
+    {% if not comment.created.strftime("%b %d, %Y %H:%M.%S") == comment.modified.strftime("%b %d, %Y %H:%M.%S") %}
+      <div class="modified-date">
+        Modifield: {{comment.modified.strftime("%b %d, %Y %H:%M.%S")}}
+      </div>
+    {% endif %}
+  </div>
+  <div class="post-content">
+    {{comment._render_text | safe}}
+  </div>
+  {% if comment.author_id == login_id %}
+    <form action="" method="post" id="EditPostForm">
+      <fieldset class="accountAction">
+        <input type="hidden" name="comment_id" value="{{comment.key().id()}}">
+        <input type="submit" class="btn btn-default" name="submit" value="Edit Post">
+      </fieldset>
+    </form>
+  {% endif %}
+</div>
+{% endblock content %}
