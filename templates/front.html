@@ -9,7 +9,7 @@ to backend course in preparation for the multi-user blog project -->
 
 <!-- for each post in the posts table it calls render_post from the post class in main.py -->
   {% for post in posts %}
-    {{ post.render_post() | safe }}
+    {{ post.render_post(login_id) | safe }}
     <br><br>
   {% endfor %}
 

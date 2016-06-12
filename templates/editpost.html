@@ -7,21 +7,20 @@ of the intro to backend course in preparation for the multi-user
 blog project -->
 
 {% block content %}
-
-<form action="" method="post" id="BlogPostForm">
-	<fieldset class="postForm">
-		<legend>Edit Blog Post</legend>
-		<span class="error">{{error}}</span>
-		<p><label for="subject">Title</label>
-			<input class="postSubject" type="text" name="subject" value="{{subject}}">
-		<p><label for="content">Content</label>
-			<textarea class="postContent" name="content">{{content}}</textarea>
-	</fieldset>
-	<fieldset class="accountAction">
-		<input type="submit" class="btn btn-default" name="submit" value="Submit">
-		<input Type="button" class="btn btn-default" name="cancel" value="Back" onClick="history.go(-1);return true;">
-	</fieldset>
-</form>
-
-
+<fieldset class="postForm">
+	<legend>Edit Blog Post</legend>
+	<form action="" method="post" id="BlogPostForm">
+			<span class="error">{{error}}</span>
+			<p><label for="subject">Title</label>
+				<input class="postSubject" type="text" name="subject" value="{{subject}}">
+			<p><label for="content">Content</label>
+				<textarea class="postContent" name="content">{{content}}</textarea>
+			<input type="submit" class="btn btn-default" name="submit" value="Submit">
+			<input Type="button" class="btn btn-default" name="cancel" value="Cancel" onClick="history.go(-1);return true;">
+	</form>
+	<form action="/delete" method="post"  enctype="multipart/form-data">
+		<input type="hidden" name="post_id" value="{{post_id}}">
+		<input type="submit" class="btn btn-default" value="delete">
+	</form>
+</fieldset>
 {% endblock %}

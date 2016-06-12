@@ -8,5 +8,5 @@ to backend course in preparation for the multi-user blog project -->
 {% block content %}
 
 <!-- renders a single blog post from PermaPost class using render post from post class in in main.py -->
-  {{post.render_post() | safe}}
+  {{post.render_post(login_id) | safe}}
 {% endblock content%}
