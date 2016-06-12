@@ -24,13 +24,10 @@ __version__ = "1.0"
 # https://cloud.google.com/appengine/docs/python/gettingstartedpython27/usingwebapp#hello-webapp2
 # TODO: store COOKIE_SECRET in a different file.
 # TODO: fix bug where the email address is not passing into the dictionary.
-# TODO: logged in users can delete posts
 # TODO: Users should only be able to like posts once and should not be able
 # to like their own post.
 # TODO: Only signed in users can post comments.
 # TODO: Users can only edit and delete comments they themselves have made.
-# TODO: Logged out users are redirected to the login page when attempting
-# to create, edit, delete, or like a blog post.
 
 # FILE LEVEL VARIABLES/CONSTANTS
 
@@ -552,15 +549,17 @@ class DeletePost(TemplateHandler):
     """ This handles the deletion of blog posts """
     def post(self):
         """ Submits data to the server to delete the post """
-        post_id = self.request.get('post_id')
-        key = db.Key.from_path('Post',
-                               int(post_id),
-                               parent=blog_key())
-        # gets the post data based upon what
-        # is passed from post_id into key
-        db.delete(key)
-        self.render('/postdeleted.html')
-
+        if self.read_secure_cookie('usercookie'):
+            post_id = self.request.get('post_id')
+            key = db.Key.from_path('Post',
+                                   int(post_id),
+                                   parent=blog_key())
+            # gets the post data based upon what
+            # is passed from post_id into key
+            db.delete(key)
+            self.render('/postdeleted.html')
+        else:
+            self.redirect('/signup')
 
 # GAE APPLICATION VARIABLE
 # This variable sets the atributes of the individual HTML
