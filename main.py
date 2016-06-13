@@ -12,6 +12,8 @@ import jinja2
 
 # import google app engine data store lib
 from google.appengine.ext import db
+from google.appengine.ext.db import metadata
+
 
 __author__ = "Harry Staley <staleyh@gmail.com>"
 __version__ = "1.0"
@@ -212,6 +214,28 @@ class Post(db.Model):
         return render_str("post.html", login_id=login_id, post=self)
 
 
+class Comment(db.Model):
+    """
+     Instantiates a class to store comments (entity or row) data for comments
+    (kiind or table) in the datastor consisting of individual atributes
+    of the post (properties or fields).
+    """
+    author_id = db.StringProperty(required=True)
+    subject = db.StringProperty(required=True)
+    content = db.TextProperty(required=True)
+    created = db.DateTimeProperty(auto_now_add=True)
+    modified = db.DateTimeProperty(auto_now=True)
+
+    def render_comment(self, post_id, login_id):
+        """
+        Renders the blog post replacing cariage returns in the text with
+        html so that it displays correctly in the borowser.
+        """
+        self._render_text = self.content.replace('\n', '<br>')
+        return render_str("comment.html", login_id=login_id,
+                          comment=self)
+
+
 class User(db.Model):
     """
     Instantiates a class to store user (entity or row) data for users
@@ -236,8 +260,14 @@ class MainPage(TemplateHandler):
         self.render("front.html", posts=posts)
 
     def post(self):
-        post_id = self.request.get('post_id')
-        self.redirect('/edit?post_id=' + post_id)
+        edit_post_id = self.request.get('edit_post_id')
+        comment_post_id = self.request.get('comment_post_id')
+        if comment_post_id:
+            post_id = comment_post_id
+            self.redirect('/newcomment?post_id=' + post_id)
+        if edit_post_id:
+            post_id = edit_post_id
+            self.redirect('/editpost?post_id=' + post_id)
 
 
 class NewPostHandler(TemplateHandler):
@@ -282,29 +312,92 @@ class NewPostHandler(TemplateHandler):
                         error=input_error)
 
 
+class NewCommentHandler(TemplateHandler):
+    """ This is the handler class for the new blog post page """
+    def get(self):
+        """
+        uses GET request to render newpost.html by calling render from the
+        TemplateHandler class
+        """
+        if self.read_secure_cookie('usercookie'):
+            post_id = self.request.get('post_id')
+            self.render("newcomment.html", post_id=post_id)
+        else:
+            self.redirect('/signup')
+
+    def post(self):
+        """
+        handles the POST request from newpost.html
+        """
+        post_id = self.request.get('post_id')
+        post_key = db.Key.from_path('Post',
+                                    int(post_id),
+                                    parent=blog_key())
+        subject_input = self.request.get('subject')
+        content_input = self.request.get('content')
+        if self.read_secure_cookie('usercookie'):
+            # Gets the user id from the cookie if the cookie is set
+            user_id = self.read_secure_cookie('usercookie')
+
+        # if subject, content, and user_id exist create an entity (row) in the
+        # GAE datastor (database) and redirect to a permanent link to the post
+        if subject_input and content_input and user_id:
+            comment = Comment(parent=Post(post_key),
+                              author_id=user_id,
+                              subject=subject_input,
+                              content=content_input)
+            comment.put()
+            # redirects to a single blog post passing the post id
+            # from the function as a string to a pagewhere the post_id
+            # is the url
+            comment_id = str(comment.key().id())
+            self.redirect('/%s' % comment_id)
+        else:
+            input_error = "Please submit both the title and the post content. "
+            self.render("newcomment.html", subject=subject_input,
+                        content=content_input,
+                        error=input_error,
+                        post_id=post_id)
+
+
 class PermaLinkHandler(TemplateHandler):
     """ Class to handle successfull blog posts that returns a permalink """
-    def get(self, post_id):
+    def get(self):
         """
         uses GET request to get the post_id from the new post
         and renders permalink.html if the blog post exists by
         passing the template into render from the TemplateHandler class.
         """
-        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
-        post = db.get(key)
-
+        post_id = self.request.get('post_id')
+        post_key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        post = db.get(post_key)
+        # gets the metadata about the datastor
+        kinds = metadata.get_kinds()
+        # checks to see if any comments exist
+        if u'Comment' in kinds:
+            comment_key = db.Key.from_path('Comment', parent=post_key)
+            comments = db.get(comment_key)
+        else:
+            comments = ''
         if not post:
             self.error(404)
             return
         else:
             if self.read_secure_cookie('usercookie'):
                 self.render("permalink.html",
-                            post=post)
+                            post=post, comments=comments)
             else:
                 self.redirect('/signup')
 
-    def post(self, post_id):
-        self.redirect('/edit?post_id=' + post_id)
+    def post(self):
+        edit_post_id = self.request.get('edit_post_id')
+        comment_post_id = self.request.get('comment_post_id')
+        if comment_post_id:
+            post_id = comment_post_id
+            self.redirect('/newcomment?post_id=' + post_id)
+        if edit_post_id:
+            post_id = edit_post_id
+            self.redirect('/editpost?post_id=' + post_id)
 
 
 class UserSignUpHandler(TemplateHandler, EncryptHandler):
@@ -569,8 +662,9 @@ class DeletePost(TemplateHandler):
 WSGI_APP = webapp2.WSGIApplication([('/?', MainPage),
                                     ('/([0-9]+)', PermaLinkHandler),
                                     ('/newpost', NewPostHandler),
+                                    ('/newcomment', NewCommentHandler),
                                     ('/signup', UserSignUpHandler),
-                                    ('/edit', EditPost),
+                                    ('/editpost', EditPost),
                                     ('/login', UserLoginHandler),
                                     ('/logout', UserLogoutHandler),
                                     ('/delete', DeletePost),

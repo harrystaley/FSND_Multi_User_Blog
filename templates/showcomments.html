@@ -1,0 +1,16 @@
+<!-- JINJA2 CHILD TEMPLATE - FRONT -->
+{% extends "permalink.html" %}
+
+<!-- THIS IS A MAJOR DEPENDENCY OF THE MULTI-USER BLOG PROJECT
+This template is borrowed from the project answer files in the intro
+to backend course in preparation for the multi-user blog project -->
+
+{% block comments %}
+
+<!-- for each post in the posts table it calls render_post from the post class in main.py -->
+  {% for comment in comments %}
+    {{ comment.render_comment(login_id) | safe }}
+    <br><br>
+  {% endfor %}
+
+{% endblock comments %}
