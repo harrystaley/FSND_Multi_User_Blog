@@ -11,6 +11,7 @@ blog project -->
 	<legend>Edit Blog Post</legend>
 	<form action="" method="post" id="BlogPostForm">
 			<span class="error">{{error}}</span>
+			<input type="hidden" name="post_id" value="{{post_id}}">
 			<p><label for="subject">Title</label>
 				<input class="postSubject" type="text" name="subject" value="{{subject}}">
 			<p><label for="content">Content</label>

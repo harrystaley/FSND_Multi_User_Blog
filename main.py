@@ -226,7 +226,7 @@ class Comment(db.Model):
     created = db.DateTimeProperty(auto_now_add=True)
     modified = db.DateTimeProperty(auto_now=True)
 
-    def render_comment(self, post_id, login_id):
+    def render_comment(self, comment_id, login_id):
         """
         Renders the blog post replacing cariage returns in the text with
         html so that it displays correctly in the borowser.
@@ -342,7 +342,7 @@ class NewCommentHandler(TemplateHandler):
         # if subject, content, and user_id exist create an entity (row) in the
         # GAE datastor (database) and redirect to a permanent link to the post
         if subject_input and content_input and user_id:
-            comment = Comment(parent=Post(post_key),
+            comment = Comment(parent=post_key,
                               author_id=user_id,
                               subject=subject_input,
                               content=content_input)
@@ -360,36 +360,39 @@ class NewCommentHandler(TemplateHandler):
                         post_id=post_id)
 
 
-class PermaLinkHandler(TemplateHandler):
+class PostLinkHandler(TemplateHandler):
     """ Class to handle successfull blog posts that returns a permalink """
-    def get(self):
+    def get(self, login_id):
         """
         uses GET request to get the post_id from the new post
         and renders permalink.html if the blog post exists by
         passing the template into render from the TemplateHandler class.
         """
-        post_id = self.request.get('post_id')
-        post_key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        url_str = self.request.url
+        post_id = url_str.rsplit('/', 1)[1]
+        post_key = db.Key.from_path('Post', int(post_id),
+                                    parent=blog_key())
         post = db.get(post_key)
         # gets the metadata about the datastor
         kinds = metadata.get_kinds()
         # checks to see if any comments exist
         if u'Comment' in kinds:
-            comment_key = db.Key.from_path('Comment', parent=post_key)
-            comments = db.get(comment_key)
+            comment_id = self.request.get('comment_id')
+            if comment_id.isdigit():
+                comment_key = db.Key.from_path('Comment', int(comment_id),
+                                               parent=post_key)
+                comments = db.get(comment_key)
+            else:
+                comments = ''
         else:
             comments = ''
-        if not post:
-            self.error(404)
-            return
+        if self.read_secure_cookie('usercookie'):
+            self.render("permalink.html",
+                        post=post, comments=comments)
         else:
-            if self.read_secure_cookie('usercookie'):
-                self.render("permalink.html",
-                            post=post, comments=comments)
-            else:
-                self.redirect('/signup')
+            self.redirect('/signup')
 
-    def post(self):
+    def post(self, login_id):
         edit_post_id = self.request.get('edit_post_id')
         comment_post_id = self.request.get('comment_post_id')
         if comment_post_id:
@@ -614,15 +617,15 @@ class EditPost(TemplateHandler):
         post_id = self.request.get('post_id')
         subject_input = self.request.get('subject')
         content_input = self.request.get('content')
-        key = db.Key.from_path('Post',
-                               int(post_id),
-                               parent=blog_key())
+        post_key = db.Key.from_path('Post',
+                                    int(post_id),
+                                    parent=blog_key())
         # gets the post data based upon what
         # is passed from post_id into key
         # if subject and content exist create an entity (row) in the GAE
         # datastor (database) and redirect to a permanent link to the post
         if subject_input and content_input:
-            post = db.get(key)
+            post = db.get(post_key)
             post.subject = subject_input
             post.content = content_input
             post.put()
@@ -660,7 +663,8 @@ class DeletePost(TemplateHandler):
 # '/([0-9]+)' recieves post_id from NewPostHandler class passing it
 # into PermaPost class via the url using regular expression
 WSGI_APP = webapp2.WSGIApplication([('/?', MainPage),
-                                    ('/([0-9]+)', PermaLinkHandler),
+                                    ('/([0-9]+)',
+                                     PostLinkHandler),
                                     ('/newpost', NewPostHandler),
                                     ('/newcomment', NewCommentHandler),
                                     ('/signup', UserSignUpHandler),
