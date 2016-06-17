@@ -38,11 +38,13 @@ extend base.html -->
       </fieldset>
     </form>
   {% endif %}
+  {% if login_id %}
     <form action="" method="post" id="AddCommentForm">
       <fieldset class="accountAction">
         <input type="hidden" name="comment_post_id" value="{{post.key().id()}}">
         <input type="submit" class="btn btn-default" name="submit" value="Add Comment">
       </fieldset>
     </form>
+  {% endif %}
 </div>
 {% endblock content %}
