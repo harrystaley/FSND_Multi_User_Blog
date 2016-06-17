@@ -1,0 +1,13 @@
+<!-- JINJA2 CHILD TEMPLATE - PERMALINK -->
+{% extends "base.html" %}
+
+<!-- THIS IS A MAJOR DEPENDENCY OF THE MULTI-USER BLOG PROJECT
+The idea for this template is borrowed from the project files in the intro
+to backend course in preparation for the multi-user blog project -->
+
+{% block content %}
+
+<!-- renders a single comment from PermaPost class using render post from post class in in main.py -->
+    {{ comment.render_comment(login_id) | safe }}
+    <br><br>
+{% endblock content%}

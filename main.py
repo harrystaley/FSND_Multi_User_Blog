@@ -30,6 +30,7 @@ __version__ = "1.0"
 # to like their own post.
 # TODO: Only signed in users can post comments.
 # TODO: Users can only edit and delete comments they themselves have made.
+# TODO: users can edit and delete comments. Users can also see comments if they exists from the permalink
 
 # FILE LEVEL VARIABLES/CONSTANTS
 
@@ -62,6 +63,14 @@ def user_key(group='default'):
     multiple groups on the same site.
     """
     return db.Key.from_path('users', group)
+
+
+def post_key(post_id):
+    """
+    This is the key that defines a post and facilitates
+    multiple groups on the same site.
+    """
+    return db.Key.from_path('Post', int(post_id), parent=blog_key())
 
 
 def render_str(template, **params):
@@ -226,7 +235,7 @@ class Comment(db.Model):
     created = db.DateTimeProperty(auto_now_add=True)
     modified = db.DateTimeProperty(auto_now=True)
 
-    def render_comment(self, comment_id, login_id):
+    def render_comment(self, login_id):
         """
         Renders the blog post replacing cariage returns in the text with
         html so that it displays correctly in the borowser.
@@ -304,7 +313,7 @@ class NewPostHandler(TemplateHandler):
             # from the function as a string to a pagewhere the post_id
             # is the url
             post_id = str(post.key().id())
-            self.redirect('/%s' % post_id)
+            self.redirect('/post-%s' % post_id)
         else:
             input_error = "Please submit both the title and the post content. "
             self.render("newpost.html", subject=subject_input,
@@ -330,9 +339,6 @@ class NewCommentHandler(TemplateHandler):
         handles the POST request from newpost.html
         """
         post_id = self.request.get('post_id')
-        post_key = db.Key.from_path('Post',
-                                    int(post_id),
-                                    parent=blog_key())
         subject_input = self.request.get('subject')
         content_input = self.request.get('content')
         if self.read_secure_cookie('usercookie'):
@@ -342,7 +348,7 @@ class NewCommentHandler(TemplateHandler):
         # if subject, content, and user_id exist create an entity (row) in the
         # GAE datastor (database) and redirect to a permanent link to the post
         if subject_input and content_input and user_id:
-            comment = Comment(parent=post_key,
+            comment = Comment(parent=post_key(post_id),
                               author_id=user_id,
                               subject=subject_input,
                               content=content_input)
@@ -351,7 +357,7 @@ class NewCommentHandler(TemplateHandler):
             # from the function as a string to a pagewhere the post_id
             # is the url
             comment_id = str(comment.key().id())
-            self.redirect('/%s' % comment_id)
+            self.redirect('/comment-%s?post_id=%s' % (comment_id, post_id))
         else:
             input_error = "Please submit both the title and the post content. "
             self.render("newcomment.html", subject=subject_input,
@@ -368,26 +374,22 @@ class PostLinkHandler(TemplateHandler):
         and renders permalink.html if the blog post exists by
         passing the template into render from the TemplateHandler class.
         """
-        url_str = self.request.url
-        post_id = url_str.rsplit('/', 1)[1]
-        post_key = db.Key.from_path('Post', int(post_id),
-                                    parent=blog_key())
-        post = db.get(post_key)
+        url_str = self.request.path
+        post_id = url_str.rsplit('post-', 1)[1]
+        key = post_key(post_id)
+        post = db.get(key)
         # gets the metadata about the datastor
         kinds = metadata.get_kinds()
         # checks to see if any comments exist
         if u'Comment' in kinds:
-            comment_id = self.request.get('comment_id')
-            if comment_id.isdigit():
-                comment_key = db.Key.from_path('Comment', int(comment_id),
-                                               parent=post_key)
-                comments = db.get(comment_key)
-            else:
-                comments = ''
+            comments = db.GqlQuery("SELECT * "
+                                   "FROM Comment "
+                                   "WHERE ANCESTOR IS KEY('Post', :postid)",
+                                   postid=post_id)
         else:
             comments = ''
         if self.read_secure_cookie('usercookie'):
-            self.render("permalink.html",
+            self.render("postlink.html",
                         post=post, comments=comments)
         else:
             self.redirect('/signup')
@@ -401,6 +403,38 @@ class PostLinkHandler(TemplateHandler):
         if edit_post_id:
             post_id = edit_post_id
             self.redirect('/editpost?post_id=' + post_id)
+
+
+class CommentLinkHandler(TemplateHandler):
+    """ Class to handle successfull blog posts that returns a permalink """
+    def get(self, login_id):
+        """
+        uses GET request to get the post_id from the new post
+        and renders permalink.html if the blog post exists by
+        passing the template into render from the TemplateHandler class.
+        """
+        post_id = self.request.get('post_id')
+        url_str = self.request.path
+        comment_id = url_str.rsplit('comment-', 1)[1]
+        comment_key = db.Key.from_path('Comment', int(comment_id),
+                                       parent=post_key(post_id))
+        comment = db.get(comment_key)
+        # gets the metadata about the datastor
+        # checks to see if any comments exist
+        if self.read_secure_cookie('usercookie'):
+            self.render("commentlink.html", comment=comment)
+        else:
+            self.redirect('/signup')
+
+    def post(self, login_id):
+        edit_comment_id = self.request.get('edit_post_id')
+        comment_post_id = self.request.get('comment_post_id')
+        if comment_post_id:
+            post_id = comment_post_id
+            self.redirect('/newcomment?post_id=' + post_id)
+        if edit_comment_id:
+            comment_id = edit_comment_id
+            self.redirect('/editcomment?comment_id=' + post_id)
 
 
 class UserSignUpHandler(TemplateHandler, EncryptHandler):
@@ -633,7 +667,7 @@ class EditPost(TemplateHandler):
             # from the function as a string to a pagewhere the post_id
             # is the url
             post_id = str(post.key().id())
-            self.redirect('/%s' % post_id)
+            self.redirect('/post-%s' % post_id)
         else:
             input_error = "Please submit both the title and the post content. "
             self.render("editpost.html", subject=subject_input,
@@ -663,8 +697,10 @@ class DeletePost(TemplateHandler):
 # '/([0-9]+)' recieves post_id from NewPostHandler class passing it
 # into PermaPost class via the url using regular expression
 WSGI_APP = webapp2.WSGIApplication([('/?', MainPage),
-                                    ('/([0-9]+)',
+                                    ('/post-([0-9]+)',
                                      PostLinkHandler),
+                                    ('/comment-([0-9]+)',
+                                     CommentLinkHandler),
                                     ('/newpost', NewPostHandler),
                                     ('/newcomment', NewCommentHandler),
                                     ('/signup', UserSignUpHandler),
