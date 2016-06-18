@@ -10,7 +10,7 @@ extend base.html -->
 
 {% block content %}
 
-<div class="post">
+<div class="post" id="comment">
   <div class="post-heading">
     <div class="post-title">
       Title: {{comment.subject}}
@@ -31,7 +31,7 @@ extend base.html -->
     {{comment._render_text | safe}}
   </div>
   {% if comment.author_id == login_id %}
-    <form action="" method="post" id="EditPostForm">
+    <form action="" method="post" id="EditCommentForm">
       <fieldset class="accountAction">
         <input type="hidden" name="edit_comment_id" value="{{comment.key().id()}}">
         <input type="submit" class="btn btn-primary" name="submit" value="Edit Comment">

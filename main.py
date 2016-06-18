@@ -28,9 +28,7 @@ __version__ = "1.0"
 # TODO: fix bug where the email address is not passing into the dictionary.
 # TODO: Users should only be able to like posts once and should not be able
 # to like their own post.
-# TODO: Only signed in users can post comments.
-# TODO: Users can only edit and delete comments they themselves have made.
-# TODO: users can edit and delete comments. Users can also see comments if they exists from the permalink
+# TODO: resolve user ids in posts to user names
 
 # FILE LEVEL VARIABLES/CONSTANTS
 
@@ -380,21 +378,19 @@ class PostLinkHandler(TemplateHandler):
         post = db.get(key)
         # gets the metadata about the datastor
         kinds = metadata.get_kinds()
-        # checks to see if any comments exist
+        # checks to see if any comments exist and if so displays them
         if u'Comment' in kinds:
             comments = db.GqlQuery("SELECT * "
                                    "FROM Comment "
                                    "WHERE ANCESTOR IS :1", key)
         else:
             comments = ''
-        if self.read_secure_cookie('usercookie'):
-            self.render("postlink.html",
-                        post=post, comments=comments)
-        else:
-            self.redirect('/signup')
+        self.render("postlink.html",
+                    post=post, comments=comments)
 
     def post(self, login_id):
         edit_post_id = self.request.get('edit_post_id')
+        edit_comment_id = self.request.get('edit_comment_id')
         comment_post_id = self.request.get('comment_post_id')
         if comment_post_id:
             post_id = comment_post_id
@@ -402,6 +398,12 @@ class PostLinkHandler(TemplateHandler):
         if edit_post_id:
             post_id = edit_post_id
             self.redirect('/editpost?post_id=' + post_id)
+        if edit_comment_id:
+            url_str = self.request.path
+            post_id = url_str.rsplit('post-', 1)[1]
+            comment_id = edit_comment_id
+            self.redirect('/editcomment?post_id=%s&comment_id=%s' %
+                          (post_id, comment_id))
 
 
 class CommentLinkHandler(TemplateHandler):
@@ -420,17 +422,17 @@ class CommentLinkHandler(TemplateHandler):
         comment = db.get(comment_key)
         # gets the metadata about the datastor
         # checks to see if any comments exist
-        if self.read_secure_cookie('usercookie'):
-            self.render("commentlink.html", comment=comment)
-        else:
-            self.redirect('/signup')
+        self.render("commentlink.html", comment=comment)
 
     def post(self, login_id):
         comment_id = self.request.get('edit_comment_id')
         post_id = self.request.get('post_id')
-        if comment_id and post_id:
-            self.redirect('/editcomment?comment_id=%s&post_id=%s' %
-                          (comment_id, post_id))
+        if self.read_secure_cookie('usercookie'):
+            if comment_id and post_id:
+                self.redirect('/editcomment?comment_id=%s&post_id=%s' %
+                              (comment_id, post_id))
+        else:
+            self.redirect('/signup')
 
 
 class UserSignUpHandler(TemplateHandler, EncryptHandler):
