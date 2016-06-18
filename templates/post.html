@@ -32,13 +32,13 @@ extend base.html -->
   </div>
   <div class="form-controls">
     {% if post.author_id == login_id %}
-      <form action="" method="post" id="EditPostForm">
+      <form action="" method="post" id="EditPostForm" class="form-controls">
         <input type="hidden" name="edit_post_id" value="{{post.key().id()}}">
         <input type="submit" class="btn btn-primary" name="submit" value="Edit Post">
       </form>
     {% endif %}
     {% if login_id %}
-      <form action="" method="post" id="AddCommentForm">
+      <form action="" method="post" id="AddCommentForm" class="form-controls">
           <input type="hidden" name="comment_post_id" value="{{post.key().id()}}">
           <input type="submit" class="btn btn-primary" name="submit" value="Add Comment">
       </form>

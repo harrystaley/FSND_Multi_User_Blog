@@ -44,8 +44,7 @@ label {
 	font-weight: bold;
 }
 
-.btn-default {
-	background-color: #294860;
+.btn-primary {
 	-webkit-border-radius: 10%;
   	-moz-border-radius: 10%;
   	border-radius: 10%;
