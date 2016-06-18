@@ -384,8 +384,7 @@ class PostLinkHandler(TemplateHandler):
         if u'Comment' in kinds:
             comments = db.GqlQuery("SELECT * "
                                    "FROM Comment "
-                                   "WHERE ANCESTOR IS KEY('Post', :postid)",
-                                   postid=post_id)
+                                   "WHERE ANCESTOR IS :1", key)
         else:
             comments = ''
         if self.read_secure_cookie('usercookie'):
@@ -427,14 +426,11 @@ class CommentLinkHandler(TemplateHandler):
             self.redirect('/signup')
 
     def post(self, login_id):
-        edit_comment_id = self.request.get('edit_post_id')
-        comment_post_id = self.request.get('comment_post_id')
-        if comment_post_id:
-            post_id = comment_post_id
-            self.redirect('/newcomment?post_id=' + post_id)
-        if edit_comment_id:
-            comment_id = edit_comment_id
-            self.redirect('/editcomment?comment_id=' + post_id)
+        comment_id = self.request.get('edit_comment_id')
+        post_id = self.request.get('post_id')
+        if comment_id and post_id:
+            self.redirect('/editcomment?comment_id=%s&post_id=%s' %
+                          (comment_id, post_id))
 
 
 class UserSignUpHandler(TemplateHandler, EncryptHandler):
@@ -675,6 +671,67 @@ class EditPost(TemplateHandler):
                         error=input_error, post_id=post_id)
 
 
+class EditComment(TemplateHandler):
+    """ Handles the editing of blog posts """
+    def get(self):
+        """ uses get request to get newpost.html """
+        comment_id = self.request.get('comment_id')
+        post_id = self.request.get('post_id')
+        key = db.Key.from_path('Comment',
+                               int(comment_id),
+                               parent=post_key(post_id))
+        # gets the post data based upon what
+        # is passed from post_id into key
+        comment = db.get(key)
+        if self.read_secure_cookie('usercookie'):
+            user_id = self.read_secure_cookie('usercookie')
+            # If the current logged in user is not the post author
+            # it redirects them back to the previous page
+            if user_id == comment.author_id:
+                self.render("editcomment.html",
+                            subject=comment.subject,
+                            content=comment.content,
+                            post_id=post_id,
+                            comment_id=comment_id)
+            else:
+                referrer = self.request.headers.get('referer')
+                if referrer:
+                    return self.redirect(referrer)
+                return self.redirect_to('/')
+        else:
+            self.redirect('/signup')
+
+    def post(self):
+        """
+        handles the POST request from newpost.html
+        """
+        post_id = self.request.get('post_id')
+        comment_id = self.request.get('comment_id')
+        subject_input = self.request.get('subject')
+        content_input = self.request.get('content')
+        comment_key = db.Key.from_path('Comment',
+                                       int(comment_id),
+                                       parent=post_key(post_id))
+        # gets the post data based upon what
+        # is passed from post_id into key
+        # if subject and content exist create an entity (row) in the GAE
+        # datastor (database) and redirect to a permanent link to the post
+        if subject_input and content_input:
+            comment = db.get(comment_key)
+            comment.subject = subject_input
+            comment.content = content_input
+            comment.put()
+            # redirects to a single blog post passing the post id
+            # from the function as a string to a pagewhere the post_id
+            # is the url
+            self.redirect('/comment-%s?post_id=%s' % (comment_id, post_id))
+        else:
+            input_error = "Please submit both the title and the post content. "
+            self.render("editcomment.html", subject=subject_input,
+                        content=content_input, error=input_error,
+                        comment_id=comment_id, post_id=post_id)
+
+
 class DeletePost(TemplateHandler):
     """ This handles the deletion of blog posts """
     def post(self):
@@ -691,6 +748,25 @@ class DeletePost(TemplateHandler):
         else:
             self.redirect('/signup')
 
+
+class DeleteComment(TemplateHandler):
+    """ This handles the deletion of blog posts """
+    def post(self):
+        """ Submits data to the server to delete the post """
+        if self.read_secure_cookie('usercookie'):
+            comment_id = self.request.get('comment_id')
+            post_id = self.request.get('post_id')
+            key = db.Key.from_path('Comment',
+                                   int(comment_id),
+                                   parent=post_key(post_id))
+            # gets the post data based upon what
+            # is passed from post_id into key
+            db.delete(key)
+            self.render('/commentdeleted.html')
+        else:
+            self.redirect('/signup')
+
+
 # GAE APPLICATION VARIABLE
 # This variable sets the atributes of the individual HTML
 # files that will be served using google app engine.
@@ -705,8 +781,10 @@ WSGI_APP = webapp2.WSGIApplication([('/?', MainPage),
                                     ('/newcomment', NewCommentHandler),
                                     ('/signup', UserSignUpHandler),
                                     ('/editpost', EditPost),
+                                    ('/editcomment', EditComment),
                                     ('/login', UserLoginHandler),
                                     ('/logout', UserLogoutHandler),
-                                    ('/delete', DeletePost),
+                                    ('/deletepost', DeletePost),
+                                    ('/deletecomment', DeleteComment),
                                     ('/welcome', WelcomeHandler)
                                     ], debug=True)

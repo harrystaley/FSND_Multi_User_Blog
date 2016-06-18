@@ -8,10 +8,11 @@ blog project -->
 
 {% block content %}
 <fieldset class="postForm">
-	<legend>Edit Blog Post</legend>
+	<legend>Edit Comment</legend>
 	<form action="" method="post" id="BlogPostForm" class="form-controls">
 			<span class="error">{{error}}</span>
 			<input type="hidden" name="post_id" value="{{post_id}}">
+			<input type="hidden" name="comment_id" value="{{comment_id}}">
 			<p><label for="subject">Title</label>
 				<input class="postSubject" type="text" name="subject" value="{{subject}}">
 			<p><label for="content">Content</label>
@@ -23,7 +24,8 @@ blog project -->
 	<form class="form-controls">
 		<input Type="button" class="btn btn-primary" name="cancel" value="Cancel" onClick="history.go(-1);return true;">
 	</form>
-	<form action="/deletepost" method="post" class="form-controls">
+	<form action="/deletecomment" method="post" class="form-controls">
+		<input type="hidden" name="comment_id" value="{{comment_id}}">
 		<input type="hidden" name="post_id" value="{{post_id}}">
 		<input type="submit" class="btn btn-primary" value="delete">
 	</form>
