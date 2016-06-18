@@ -1,30 +1,39 @@
 /* Created by Harry Staley for the multi user blog project of the Udacity full stack Web Devlopment Nanodegree */
 
-body, legend {
+body,
+header {
 	padding-top: 70px;
+	padding-bottom: 10px;
+	padding-right: 10px;
+	padding-left: 10px;
 	background-color: #294860;
 	color: white;
 	font-family: "Ubuntu", sans-serif;
 }
 
-fieldset {
-	width: 700px;
+main,
+legend {
+	padding: 5px;
+	color: black;
+	background-color: white;
+	-webkit-border-radius: 0.5%;
+  	-moz-border-radius: 0.5%;
+  	border-radius: 0.5%;
 }
 
-fieldset p {
-	clear: both;
+footer {
+	margin-top: 10px;
+}
+
+fieldset {
+	width: 700px;
 	padding: 5px;
 }
 
-input, textarea {
+textarea {
 	min-width: 48px;
 	min-height: 48px;
 	color: black;
-}
-
-input.text{
-	width: 300px;
-	float: right;
 }
 
 label {
@@ -37,8 +46,6 @@ label {
 
 .btn-default {
 	background-color: #294860;
-	min-width: 48px;
-	min-height: 48px;
 	-webkit-border-radius: 10%;
   	-moz-border-radius: 10%;
   	border-radius: 10%;
@@ -46,6 +53,10 @@ label {
 
 .error {
 	padding: 5px;
+}
+
+.form-controls {
+    display: inline;
 }
 
 .modal-header {
