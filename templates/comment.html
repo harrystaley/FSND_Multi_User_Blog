@@ -10,13 +10,13 @@ extend base.html -->
 
 {% block content %}
 
-<div class="post" id="comment">
+<div class="comment" id="comment">
   <div class="post-heading">
     <div class="post-title">
       Title: {{comment.subject}}
     </div>
     <div class="post-author">
-      Author: {{comment.author_id}}
+      Author: {{comment.author_name}}
     </div>
     <div class="post-date">
       Created: {{comment.created.strftime("%b %d, %Y %H:%M.%S")}}

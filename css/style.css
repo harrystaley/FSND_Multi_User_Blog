@@ -44,6 +44,10 @@ label {
 	font-weight: bold;
 }
 
+.comment {
+	padding-left: 30px;
+}
+
 .btn-primary {
 	-webkit-border-radius: 10%;
   	-moz-border-radius: 10%;

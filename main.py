@@ -18,18 +18,6 @@ from google.appengine.ext.db import metadata
 __author__ = "Harry Staley <staleyh@gmail.com>"
 __version__ = "1.0"
 
-
-# TODO: once I get the file working with the example variable style I should
-# change the post variable and classnames so that they do not share
-# the same name with the post from the RequestHandler class imported
-# from webapp2. Info on webapp2 framework can be found at:
-# https://cloud.google.com/appengine/docs/python/gettingstartedpython27/usingwebapp#hello-webapp2
-# TODO: store COOKIE_SECRET in a different file.
-# TODO: fix bug where the email address is not passing into the dictionary.
-# TODO: Users should only be able to like posts once and should not be able
-# to like their own post.
-# TODO: resolve user ids in posts to user names
-
 # FILE LEVEL VARIABLES/CONSTANTS
 
 # sets the locaiton of the templates folder contained in the home of this file.
@@ -75,6 +63,14 @@ def render_str(template, **params):
     """ Gets the template and passes it with paramanters. """
     tmp = JINJA_ENV.get_template(template)
     return tmp.render(params)
+
+
+def like_dup(ent, login_id):
+    like_exists = db.GqlQuery("SELECT * "
+                              "FROM " + ent +
+                              " WHERE like_user_id = '" +
+                              login_id + "'").get()
+    return like_exists
 
 
 # CLASS DEFINITIONS
@@ -207,18 +203,31 @@ class Post(db.Model):
     of the post (properties or fields).
     """
     author_id = db.StringProperty(required=True)
+    author_name = db.StringProperty(required=True)
     subject = db.StringProperty(required=True)
     content = db.TextProperty(required=True)
     created = db.DateTimeProperty(auto_now_add=True)
     modified = db.DateTimeProperty(auto_now=True)
 
-    def render_post(self, login_id):
+    def render_post(self, login_id, likes):
         """
         Renders the blog post replacing cariage returns in the text with
         html so that it displays correctly in the borowser.
         """
         self._render_text = self.content.replace('\n', '<br>')
-        return render_str("post.html", login_id=login_id, post=self)
+        return render_str("post.html", login_id=login_id,
+                          likes=likes, post=self)
+
+    def post_like_dup(self, login_id):
+        exists = like_dup('PostLike', login_id)
+        return exists
+
+
+class PostLike(db.Model):
+    """
+    Handles the likes for each of the posts
+    """
+    like_user_id = db.StringProperty(required=True)
 
 
 class Comment(db.Model):
@@ -228,6 +237,7 @@ class Comment(db.Model):
     of the post (properties or fields).
     """
     author_id = db.StringProperty(required=True)
+    author_name = db.StringProperty(required=True)
     subject = db.StringProperty(required=True)
     content = db.TextProperty(required=True)
     created = db.DateTimeProperty(auto_now_add=True)
@@ -269,15 +279,29 @@ class MainPage(TemplateHandler):
     def post(self):
         edit_post_id = self.request.get('edit_post_id')
         comment_post_id = self.request.get('comment_post_id')
+        like_post_id = self.request.get('like_post_id')
         if comment_post_id:
             post_id = comment_post_id
             self.redirect('/newcomment?post_id=' + post_id)
         if edit_post_id:
             post_id = edit_post_id
             self.redirect('/editpost?post_id=' + post_id)
+        if like_post_id:
+            post_id = like_post_id
+            user_id = self.read_secure_cookie('usercookie')
+            if self.read_secure_cookie('usercookie'):
+                if not like_dup('PostLike', user_id):
+                    post_id = like_post_id
+                    user_id = self.read_secure_cookie('usercookie')
+                    like = PostLike(like_user_id=user_id,
+                                    parent=post_key(post_id))
+                    like.put()
+                    self.redirect('/')
+            else:
+                self.redirect('/signup')
 
 
-class NewPostHandler(TemplateHandler):
+class NewPostHandler(TemplateHandler, EncryptHandler):
     """ This is the handler class for the new blog post page """
     def get(self):
         """
@@ -298,12 +322,14 @@ class NewPostHandler(TemplateHandler):
         if self.read_secure_cookie('usercookie'):
             # Gets the user id from the cookie if the cookie is set
             user_id = self.read_secure_cookie('usercookie')
-
+            key = db.Key.from_path('User', int(user_id), parent=user_key())
+            user = db.get(key)
         # if subject, content, and user_id exist create an entity (row) in the
         # GAE datastor (database) and redirect to a permanent link to the post
         if subject_input and content_input and user_id:
             post = Post(parent=blog_key(),
                         author_id=user_id,
+                        author_name=user.username,
                         subject=subject_input,
                         content=content_input)
             post.put()
@@ -319,7 +345,7 @@ class NewPostHandler(TemplateHandler):
                         error=input_error)
 
 
-class NewCommentHandler(TemplateHandler):
+class NewCommentHandler(TemplateHandler, EncryptHandler):
     """ This is the handler class for the new blog post page """
     def get(self):
         """
@@ -342,12 +368,14 @@ class NewCommentHandler(TemplateHandler):
         if self.read_secure_cookie('usercookie'):
             # Gets the user id from the cookie if the cookie is set
             user_id = self.read_secure_cookie('usercookie')
-
+            key = db.Key.from_path('User', int(user_id), parent=user_key())
+            user = db.get(key)
         # if subject, content, and user_id exist create an entity (row) in the
         # GAE datastor (database) and redirect to a permanent link to the post
         if subject_input and content_input and user_id:
             comment = Comment(parent=post_key(post_id),
                               author_id=user_id,
+                              author_name=user.username,
                               subject=subject_input,
                               content=content_input)
             comment.put()
@@ -364,7 +392,7 @@ class NewCommentHandler(TemplateHandler):
                         post_id=post_id)
 
 
-class PostLinkHandler(TemplateHandler):
+class PostLinkHandler(TemplateHandler, EncryptHandler):
     """ Class to handle successfull blog posts that returns a permalink """
     def get(self, login_id):
         """
@@ -378,6 +406,13 @@ class PostLinkHandler(TemplateHandler):
         post = db.get(key)
         # gets the metadata about the datastor
         kinds = metadata.get_kinds()
+        # checks to see if any likes exist and if so displays them
+        if u'PostLike' in kinds:
+            likes = db.GqlQuery("SELECT * "
+                                "FROM PostLike "
+                                "WHERE ANCESTOR IS :1", key).count()
+        else:
+            likes = 0
         # checks to see if any comments exist and if so displays them
         if u'Comment' in kinds:
             comments = db.GqlQuery("SELECT * "
@@ -385,13 +420,14 @@ class PostLinkHandler(TemplateHandler):
                                    "WHERE ANCESTOR IS :1", key)
         else:
             comments = ''
-        self.render("postlink.html",
-                    post=post, comments=comments)
+        self.render("postlink.html", post=post,
+                    comments=comments, likes=likes)
 
     def post(self, login_id):
         edit_post_id = self.request.get('edit_post_id')
         edit_comment_id = self.request.get('edit_comment_id')
         comment_post_id = self.request.get('comment_post_id')
+        like_post_id = self.request.get('like_post_id')
         if comment_post_id:
             post_id = comment_post_id
             self.redirect('/newcomment?post_id=' + post_id)
@@ -404,6 +440,19 @@ class PostLinkHandler(TemplateHandler):
             comment_id = edit_comment_id
             self.redirect('/editcomment?post_id=%s&comment_id=%s' %
                           (post_id, comment_id))
+        if like_post_id:
+            post_id = like_post_id
+            user_id = self.read_secure_cookie('usercookie')
+            if self.read_secure_cookie('usercookie'):
+                if not like_dup('PostLike', user_id):
+                    post_id = like_post_id
+                    user_id = self.read_secure_cookie('usercookie')
+                    like = PostLike(like_user_id=user_id,
+                                    parent=post_key(post_id))
+                    like.put()
+                    self.redirect('/post-%s' % post_id)
+            else:
+                self.redirect('/signup')
 
 
 class CommentLinkHandler(TemplateHandler):

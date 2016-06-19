@@ -8,8 +8,9 @@ to backend course in preparation for the multi-user blog project -->
 {% block content %}
 
 <!-- for each post in the posts table it calls render_post from the post class in main.py -->
+  <h3>Recent posts.</h3>
   {% for post in posts %}
-    {{ post.render_post(login_id) | safe }}
+    {{ post.render_post(login_id, likes) | safe }}
     <br><br>
   {% endfor %}
 
