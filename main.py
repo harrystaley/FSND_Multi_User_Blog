@@ -303,7 +303,7 @@ class User(db.Model):
     email = db.StringProperty()
 
 
-class MainPage(TemplateHandler):
+class MainPage(TemplateHandler, AuthHandler):
     """ This is the handler class for the main page for the blog. """
     def get(self):
         """
@@ -316,28 +316,34 @@ class MainPage(TemplateHandler):
         self.render("front.html", posts=posts)
 
     def post(self):
-        edit_post_id = self.request.get('edit_post_id')
-        comment_post_id = self.request.get('comment_post_id')
-        like_post_id = self.request.get('like_post_id')
-        if comment_post_id:
-            post_id = comment_post_id
-            self.redirect('/newcomment?post_id=' + post_id)
-        if edit_post_id:
-            post_id = edit_post_id
-            self.redirect('/editpost?post_id=' + post_id)
-        if like_post_id:
-            post_id = like_post_id
-            user_id = self.read_secure_cookie('usercookie')
-            if self.read_secure_cookie('usercookie'):
+        """ handles the post for from the main page """
+        auth_error = True
+        if self.read_secure_cookie('usercookie'):
+            auth_error = False
+        username = self.read_secure_cookie('usercookie')
+        if not self.user_exists(username):
+            auth_error = False
+
+        if not auth_error:
+            edit_post_id = self.request.get('edit_post_id')
+            comment_post_id = self.request.get('comment_post_id')
+            like_post_id = self.request.get('like_post_id')
+            if comment_post_id:
+                post_id = comment_post_id
+                self.redirect('/newcomment?post_id=' + post_id)
+            if edit_post_id:
+                post_id = edit_post_id
+                self.redirect('/editpost?post_id=' + post_id)
+            if like_post_id:
+                post_id = like_post_id
+                user_id = self.read_secure_cookie('usercookie')
                 if not like_dup('PostLike', user_id, post_id):
-                    post_id = like_post_id
-                    user_id = self.read_secure_cookie('usercookie')
                     like = PostLike(like_user_id=user_id,
                                     parent=post_key(post_id))
                     like.put()
                     self.redirect('/')
-            else:
-                self.redirect('/signup')
+        else:
+            self.redirect('/signup')
 
 
 class NewPostHandler(TemplateHandler, AuthHandler):
@@ -356,14 +362,14 @@ class NewPostHandler(TemplateHandler, AuthHandler):
         """
         handles the POST request from newpost.html
         """
-        have_error = True
+        auth_error = True
         if self.read_secure_cookie('usercookie'):
-            have_error = False
+            auth_error = False
         username = self.read_secure_cookie('usercookie')
         if not self.user_exists(username):
-            have_error = False
+            auth_error = False
 
-        if not have_error:
+        if not auth_error:
             subject_input = self.request.get('subject')
             content_input = self.request.get('content')
             if self.read_secure_cookie('usercookie'):
@@ -412,14 +418,14 @@ class NewCommentHandler(TemplateHandler, AuthHandler):
         """
         handles the POST request from newpost.html
         """
-        have_error = True
+        auth_error = True
         if self.read_secure_cookie('usercookie'):
-            have_error = False
+            auth_error = False
         username = self.read_secure_cookie('usercookie')
         if not self.user_exists(username):
-            have_error = False
+            auth_error = False
 
-        if not have_error:
+        if not auth_error:
             post_id = self.request.get('post_id')
             subject_input = self.request.get('subject')
             content_input = self.request.get('content')
@@ -453,7 +459,7 @@ class NewCommentHandler(TemplateHandler, AuthHandler):
             self.redirect('/signup')
 
 
-class PostLinkHandler(TemplateHandler, EncryptHandler):
+class PostLinkHandler(TemplateHandler, AuthHandler):
     """ Class to handle successfull blog posts that returns a permalink """
     def get(self, login_id):
         """
@@ -478,38 +484,43 @@ class PostLinkHandler(TemplateHandler, EncryptHandler):
                     comments=comments)
 
     def post(self, login_id):
-        edit_post_id = self.request.get('edit_post_id')
-        edit_comment_id = self.request.get('edit_comment_id')
-        comment_post_id = self.request.get('comment_post_id')
-        like_post_id = self.request.get('like_post_id')
-        if comment_post_id:
-            post_id = comment_post_id
-            self.redirect('/newcomment?post_id=' + post_id)
-        if edit_post_id:
-            post_id = edit_post_id
-            self.redirect('/editpost?post_id=' + post_id)
-        if edit_comment_id:
-            url_str = self.request.path
-            post_id = url_str.rsplit('post-', 1)[1]
-            comment_id = edit_comment_id
-            self.redirect('/editcomment?post_id=%s&comment_id=%s' %
-                          (post_id, comment_id))
-        if like_post_id:
-            post_id = like_post_id
-            user_id = self.read_secure_cookie('usercookie')
-            if self.read_secure_cookie('usercookie'):
+        auth_error = True
+        if self.read_secure_cookie('usercookie'):
+            auth_error = False
+        username = self.read_secure_cookie('usercookie')
+        if not self.user_exists(username):
+            auth_error = False
+
+        if not auth_error:
+            edit_post_id = self.request.get('edit_post_id')
+            edit_comment_id = self.request.get('edit_comment_id')
+            comment_post_id = self.request.get('comment_post_id')
+            like_post_id = self.request.get('like_post_id')
+            if comment_post_id:
+                post_id = comment_post_id
+                self.redirect('/newcomment?post_id=' + post_id)
+            if edit_post_id:
+                post_id = edit_post_id
+                self.redirect('/editpost?post_id=' + post_id)
+            if edit_comment_id:
+                url_str = self.request.path
+                post_id = url_str.rsplit('post-', 1)[1]
+                comment_id = edit_comment_id
+                self.redirect('/editcomment?post_id=%s&comment_id=%s' %
+                              (post_id, comment_id))
+            if like_post_id:
+                post_id = like_post_id
+                user_id = self.read_secure_cookie('usercookie')
                 if not like_dup('PostLike', user_id, post_id):
-                    post_id = like_post_id
-                    user_id = self.read_secure_cookie('usercookie')
                     like = PostLike(like_user_id=user_id,
                                     parent=post_key(post_id))
                     like.put()
                     self.redirect('/post-%s' % post_id)
-            else:
-                self.redirect('/signup')
+        else:
+            self.redirect('/signup')
 
 
-class CommentLinkHandler(TemplateHandler):
+class CommentLinkHandler(TemplateHandler, AuthHandler):
     """ Class to handle successfull blog posts that returns a permalink """
     def get(self, login_id):
         """
@@ -528,12 +539,20 @@ class CommentLinkHandler(TemplateHandler):
         self.render("commentlink.html", comment=comment)
 
     def post(self, login_id):
-        comment_id = self.request.get('edit_comment_id')
-        post_id = self.request.get('post_id')
+        auth_error = True
         if self.read_secure_cookie('usercookie'):
-            if comment_id and post_id:
-                self.redirect('/editcomment?comment_id=%s&post_id=%s' %
-                              (comment_id, post_id))
+            auth_error = False
+        username = self.read_secure_cookie('usercookie')
+        if not self.user_exists(username):
+            auth_error = False
+
+        if not auth_error:
+            comment_id = self.request.get('edit_comment_id')
+            post_id = self.request.get('post_id')
+            if self.read_secure_cookie('usercookie'):
+                if comment_id and post_id:
+                    self.redirect('/editcomment?comment_id=%s&post_id=%s' %
+                                  (comment_id, post_id))
         else:
             self.redirect('/signup')
 
@@ -628,7 +647,7 @@ class UserLoginHandler(TemplateHandler, AuthHandler):
 
     def post(self):
         """ handles the POST request from signup.html """
-        have_error = False
+        auth_error = True
         username = self.request.get('username')
         password = self.request.get('password')
 
@@ -636,17 +655,19 @@ class UserLoginHandler(TemplateHandler, AuthHandler):
         params = dict(username=username)
 
         # if the username already exists or it is an error
-        if not self.user_exists(username):
+        if self.user_exists(username):
+            auth_error = False
+            # tests for valid password and password match
+            if self.user_auth(username, password):
+                auth_error = False
+            else:
+                params['error_password'] = 'Invalid Password'
+        else:
             params['error_username'] = 'User Does Not Exist'
-            have_error = True
-        # tests for valid password and password match
-        elif not self.user_auth(username, password):
-            params['error_password'] = 'Invalid Password'
-            have_error = True
 
         # if there is an error re-render signup page
         # else render the welcome page
-        if have_error:
+        if auth_error:
             self.render("login.html", **params)
         else:
             user = db.GqlQuery("SELECT * "
@@ -725,14 +746,14 @@ class EditPost(TemplateHandler, AuthHandler):
         """
         handles the POST request from newpost.html
         """
-        have_error = True
+        auth_error = True
         if self.read_secure_cookie('usercookie'):
-            have_error = False
+            auth_error = False
         username = self.read_secure_cookie('usercookie')
         if not self.user_exists(username):
-            have_error = False
+            auth_error = False
 
-        if not have_error:
+        if not auth_error:
             post_id = self.request.get('post_id')
             subject_input = self.request.get('subject')
             content_input = self.request.get('content')
@@ -797,14 +818,14 @@ class EditComment(TemplateHandler, AuthHandler):
         """
         handles the POST request from newpost.html
         """
-        have_error = True
+        auth_error = True
         if self.read_secure_cookie('usercookie'):
-            have_error = False
+            auth_error = False
         username = self.read_secure_cookie('usercookie')
         if not self.user_exists(username):
-            have_error = False
+            auth_error = False
 
-        if not have_error:
+        if not auth_error:
             post_id = self.request.get('post_id')
             comment_id = self.request.get('comment_id')
             subject_input = self.request.get('subject')
@@ -838,14 +859,14 @@ class DeletePost(TemplateHandler, AuthHandler):
     """ This handles the deletion of blog posts """
     def post(self):
         """ Submits data to the server to delete the post """
-        have_error = True
+        auth_error = True
         if self.read_secure_cookie('usercookie'):
-            have_error = False
+            auth_error = False
         username = self.read_secure_cookie('usercookie')
         if not self.user_exists(username):
-            have_error = False
+            auth_error = False
 
-        if not have_error:
+        if not auth_error:
             post_id = self.request.get('post_id')
             key = db.Key.from_path('Post',
                                    int(post_id),
@@ -862,14 +883,14 @@ class DeleteComment(TemplateHandler, AuthHandler):
     """ This handles the deletion of blog posts """
     def post(self):
         """ Submits data to the server to delete the post """
-        have_error = True
+        auth_error = True
         if self.read_secure_cookie('usercookie'):
-            have_error = False
+            auth_error = False
         username = self.read_secure_cookie('usercookie')
         if not self.user_exists(username):
-            have_error = False
+            auth_error = False
 
-        if not have_error:
+        if not auth_error:
             comment_id = self.request.get('comment_id')
             post_id = self.request.get('post_id')
             key = db.Key.from_path('Comment',
