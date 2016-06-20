@@ -113,6 +113,30 @@ class EncryptHandler(object):
             return val
 
 
+class AuthHandler(EncryptHandler):
+    """ Handles user authentication """
+    def user_exists(self, username):
+        """ validates that the user exists in the database """
+        username_exists = db.GqlQuery("SELECT * "
+                                      "FROM User "
+                                      "WHERE username = :usernm",
+                                      usernm=username).get()
+        return username_exists
+
+    def user_auth(self, username, password):
+        """
+        If the username exists it suthenticates the password of the user
+        """
+        user = db.GqlQuery("SELECT * "
+                           "FROM User "
+                           "WHERE username = :usernm",
+                           usernm=username).get()
+        if user:
+            return self.valid_pass_hash(user.username,
+                                        password,
+                                        user.pass_hash)
+
+
 class TemplateHandler(webapp2.RequestHandler, EncryptHandler):
     """
      TemplateHandler class for all functions in this app for rendering
@@ -316,7 +340,7 @@ class MainPage(TemplateHandler):
                 self.redirect('/signup')
 
 
-class NewPostHandler(TemplateHandler, EncryptHandler):
+class NewPostHandler(TemplateHandler, AuthHandler):
     """ This is the handler class for the new blog post page """
     def get(self):
         """
@@ -332,35 +356,46 @@ class NewPostHandler(TemplateHandler, EncryptHandler):
         """
         handles the POST request from newpost.html
         """
-        subject_input = self.request.get('subject')
-        content_input = self.request.get('content')
+        have_error = True
         if self.read_secure_cookie('usercookie'):
-            # Gets the user id from the cookie if the cookie is set
-            user_id = self.read_secure_cookie('usercookie')
-            key = db.Key.from_path('User', int(user_id), parent=user_key())
-            user = db.get(key)
-        # if subject, content, and user_id exist create an entity (row) in the
-        # GAE datastor (database) and redirect to a permanent link to the post
-        if subject_input and content_input and user_id:
-            post = Post(parent=blog_key(),
-                        author_id=user_id,
-                        author_name=user.username,
-                        subject=subject_input,
-                        content=content_input)
-            post.put()
-            # redirects to a single blog post passing the post id
-            # from the function as a string to a pagewhere the post_id
-            # is the url
-            post_id = str(post.key().id())
-            self.redirect('/post-%s' % post_id)
+            have_error = False
+        username = self.read_secure_cookie('usercookie')
+        if not self.user_exists(username):
+            have_error = False
+
+        if not have_error:
+            subject_input = self.request.get('subject')
+            content_input = self.request.get('content')
+            if self.read_secure_cookie('usercookie'):
+                # Gets the user id from the cookie if the cookie is set
+                user_id = self.read_secure_cookie('usercookie')
+                key = db.Key.from_path('User', int(user_id), parent=user_key())
+                user = db.get(key)
+            # if subject, content, and user_id exist create an entity (row) in
+            # the GAE datastor (database) and redirect to a permanent link to
+            # the post
+            if subject_input and content_input and user_id:
+                post = Post(parent=blog_key(),
+                            author_id=user_id,
+                            author_name=user.username,
+                            subject=subject_input,
+                            content=content_input)
+                post.put()
+                # redirects to a single blog post passing the post id
+                # from the function as a string to a pagewhere the post_id
+                # is the url
+                post_id = str(post.key().id())
+                self.redirect('/post-%s' % post_id)
+            else:
+                input_error = "Please submit both the title and content."
+                self.render("newpost.html", subject=subject_input,
+                            content=content_input,
+                            error=input_error)
         else:
-            input_error = "Please submit both the title and the post content. "
-            self.render("newpost.html", subject=subject_input,
-                        content=content_input,
-                        error=input_error)
+            self.redirect('/signup')
 
 
-class NewCommentHandler(TemplateHandler, EncryptHandler):
+class NewCommentHandler(TemplateHandler, AuthHandler):
     """ This is the handler class for the new blog post page """
     def get(self):
         """
@@ -377,34 +412,45 @@ class NewCommentHandler(TemplateHandler, EncryptHandler):
         """
         handles the POST request from newpost.html
         """
-        post_id = self.request.get('post_id')
-        subject_input = self.request.get('subject')
-        content_input = self.request.get('content')
+        have_error = True
         if self.read_secure_cookie('usercookie'):
-            # Gets the user id from the cookie if the cookie is set
-            user_id = self.read_secure_cookie('usercookie')
-            key = db.Key.from_path('User', int(user_id), parent=user_key())
-            user = db.get(key)
-        # if subject, content, and user_id exist create an entity (row) in the
-        # GAE datastor (database) and redirect to a permanent link to the post
-        if subject_input and content_input and user_id:
-            comment = Comment(parent=post_key(post_id),
-                              author_id=user_id,
-                              author_name=user.username,
-                              subject=subject_input,
-                              content=content_input)
-            comment.put()
-            # redirects to a single blog post passing the post id
-            # from the function as a string to a pagewhere the post_id
-            # is the url
-            comment_id = str(comment.key().id())
-            self.redirect('/comment-%s?post_id=%s' % (comment_id, post_id))
+            have_error = False
+        username = self.read_secure_cookie('usercookie')
+        if not self.user_exists(username):
+            have_error = False
+
+        if not have_error:
+            post_id = self.request.get('post_id')
+            subject_input = self.request.get('subject')
+            content_input = self.request.get('content')
+            if self.read_secure_cookie('usercookie'):
+                # Gets the user id from the cookie if the cookie is set
+                user_id = self.read_secure_cookie('usercookie')
+                key = db.Key.from_path('User', int(user_id), parent=user_key())
+                user = db.get(key)
+            # if subject, content, and user_id exist create an entity (row) in
+            # the GAE datastor (database) and redirect to a permanent link to
+            # the post
+            if subject_input and content_input and user_id:
+                comment = Comment(parent=post_key(post_id),
+                                  author_id=user_id,
+                                  author_name=user.username,
+                                  subject=subject_input,
+                                  content=content_input)
+                comment.put()
+                # redirects to a single blog post passing the post id
+                # from the function as a string to a pagewhere the post_id
+                # is the url
+                comment_id = str(comment.key().id())
+                self.redirect('/comment-%s?post_id=%s' % (comment_id, post_id))
+            else:
+                input_error = "Please submit both the title and content."
+                self.render("newcomment.html", subject=subject_input,
+                            content=content_input,
+                            error=input_error,
+                            post_id=post_id)
         else:
-            input_error = "Please submit both the title and the post content. "
-            self.render("newcomment.html", subject=subject_input,
-                        content=content_input,
-                        error=input_error,
-                        post_id=post_id)
+            self.redirect('/signup')
 
 
 class PostLinkHandler(TemplateHandler, EncryptHandler):
@@ -571,30 +617,6 @@ class UserSignUpHandler(TemplateHandler, EncryptHandler):
             self.redirect('/welcome')
 
 
-class AuthHandler(EncryptHandler):
-    """ Handles user authentication """
-    def user_exists(self, username):
-        """ validates that the user exists in the database """
-        username_exists = db.GqlQuery("SELECT * "
-                                      "FROM User "
-                                      "WHERE username = :usernm",
-                                      usernm=username).get()
-        return username_exists
-
-    def user_auth(self, username, password):
-        """
-        If the username exists it suthenticates the password of the user
-        """
-        user = db.GqlQuery("SELECT * "
-                           "FROM User "
-                           "WHERE username = :usernm",
-                           usernm=username).get()
-        if user:
-            return self.valid_pass_hash(user.username,
-                                        password,
-                                        user.pass_hash)
-
-
 class UserLoginHandler(TemplateHandler, AuthHandler):
     """ This is the hander class for the user sign up page """
     def get(self):
@@ -671,7 +693,7 @@ class WelcomeHandler(TemplateHandler):
             self.redirect('/signup')
 
 
-class EditPost(TemplateHandler):
+class EditPost(TemplateHandler, AuthHandler):
     """ Handles the editing of blog posts """
     def get(self):
         """ uses get request to get newpost.html """
@@ -703,34 +725,45 @@ class EditPost(TemplateHandler):
         """
         handles the POST request from newpost.html
         """
-        post_id = self.request.get('post_id')
-        subject_input = self.request.get('subject')
-        content_input = self.request.get('content')
-        post_key = db.Key.from_path('Post',
-                                    int(post_id),
-                                    parent=blog_key())
-        # gets the post data based upon what
-        # is passed from post_id into key
-        # if subject and content exist create an entity (row) in the GAE
-        # datastor (database) and redirect to a permanent link to the post
-        if subject_input and content_input:
-            post = db.get(post_key)
-            post.subject = subject_input
-            post.content = content_input
-            post.put()
-            # redirects to a single blog post passing the post id
-            # from the function as a string to a pagewhere the post_id
-            # is the url
-            post_id = str(post.key().id())
-            self.redirect('/post-%s' % post_id)
+        have_error = True
+        if self.read_secure_cookie('usercookie'):
+            have_error = False
+        username = self.read_secure_cookie('usercookie')
+        if not self.user_exists(username):
+            have_error = False
+
+        if not have_error:
+            post_id = self.request.get('post_id')
+            subject_input = self.request.get('subject')
+            content_input = self.request.get('content')
+            post_key = db.Key.from_path('Post',
+                                        int(post_id),
+                                        parent=blog_key())
+            # gets the post data based upon what
+            # is passed from post_id into key
+            # if subject and content exist create an entity (row) in
+            # the GAE datastor (database) and redirect to a permanent
+            # link to the post
+            if subject_input and content_input:
+                post = db.get(post_key)
+                post.subject = subject_input
+                post.content = content_input
+                post.put()
+                # redirects to a single blog post passing the post id
+                # from the function as a string to a pagewhere the post_id
+                # is the url
+                post_id = str(post.key().id())
+                self.redirect('/post-%s' % post_id)
+            else:
+                input_error = "Please submit both the title and content."
+                self.render("editpost.html", subject=subject_input,
+                            content=content_input,
+                            error=input_error, post_id=post_id)
         else:
-            input_error = "Please submit both the title and the post content. "
-            self.render("editpost.html", subject=subject_input,
-                        content=content_input,
-                        error=input_error, post_id=post_id)
+            self.redirect('/signup')
 
 
-class EditComment(TemplateHandler):
+class EditComment(TemplateHandler, AuthHandler):
     """ Handles the editing of blog posts """
     def get(self):
         """ uses get request to get newpost.html """
@@ -764,38 +797,55 @@ class EditComment(TemplateHandler):
         """
         handles the POST request from newpost.html
         """
-        post_id = self.request.get('post_id')
-        comment_id = self.request.get('comment_id')
-        subject_input = self.request.get('subject')
-        content_input = self.request.get('content')
-        comment_key = db.Key.from_path('Comment',
-                                       int(comment_id),
-                                       parent=post_key(post_id))
-        # gets the post data based upon what
-        # is passed from post_id into key
-        # if subject and content exist create an entity (row) in the GAE
-        # datastor (database) and redirect to a permanent link to the post
-        if subject_input and content_input:
-            comment = db.get(comment_key)
-            comment.subject = subject_input
-            comment.content = content_input
-            comment.put()
-            # redirects to a single blog post passing the post id
-            # from the function as a string to a pagewhere the post_id
-            # is the url
-            self.redirect('/comment-%s?post_id=%s' % (comment_id, post_id))
+        have_error = True
+        if self.read_secure_cookie('usercookie'):
+            have_error = False
+        username = self.read_secure_cookie('usercookie')
+        if not self.user_exists(username):
+            have_error = False
+
+        if not have_error:
+            post_id = self.request.get('post_id')
+            comment_id = self.request.get('comment_id')
+            subject_input = self.request.get('subject')
+            content_input = self.request.get('content')
+            comment_key = db.Key.from_path('Comment',
+                                           int(comment_id),
+                                           parent=post_key(post_id))
+            # gets the post data based upon what
+            # is passed from post_id into key
+            # if subject and content exist create an entity (row) in the GAE
+            # datastor (database) and redirect to a permanent link to the post
+            if subject_input and content_input:
+                comment = db.get(comment_key)
+                comment.subject = subject_input
+                comment.content = content_input
+                comment.put()
+                # redirects to a single blog post passing the post id
+                # from the function as a string to a pagewhere the post_id
+                # is the url
+                self.redirect('/comment-%s?post_id=%s' % (comment_id, post_id))
+            else:
+                input_error = "Please submit both the title and the content."
+                self.render("editcomment.html", subject=subject_input,
+                            content=content_input, error=input_error,
+                            comment_id=comment_id, post_id=post_id)
         else:
-            input_error = "Please submit both the title and the post content. "
-            self.render("editcomment.html", subject=subject_input,
-                        content=content_input, error=input_error,
-                        comment_id=comment_id, post_id=post_id)
+            self.redirect('/signup')
 
 
-class DeletePost(TemplateHandler):
+class DeletePost(TemplateHandler, AuthHandler):
     """ This handles the deletion of blog posts """
     def post(self):
         """ Submits data to the server to delete the post """
+        have_error = True
         if self.read_secure_cookie('usercookie'):
+            have_error = False
+        username = self.read_secure_cookie('usercookie')
+        if not self.user_exists(username):
+            have_error = False
+
+        if not have_error:
             post_id = self.request.get('post_id')
             key = db.Key.from_path('Post',
                                    int(post_id),
@@ -808,11 +858,18 @@ class DeletePost(TemplateHandler):
             self.redirect('/signup')
 
 
-class DeleteComment(TemplateHandler):
+class DeleteComment(TemplateHandler, AuthHandler):
     """ This handles the deletion of blog posts """
     def post(self):
         """ Submits data to the server to delete the post """
+        have_error = True
         if self.read_secure_cookie('usercookie'):
+            have_error = False
+        username = self.read_secure_cookie('usercookie')
+        if not self.user_exists(username):
+            have_error = False
+
+        if not have_error:
             comment_id = self.request.get('comment_id')
             post_id = self.request.get('post_id')
             key = db.Key.from_path('Comment',
