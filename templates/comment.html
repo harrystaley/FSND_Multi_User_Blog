@@ -11,32 +11,32 @@ extend base.html -->
 {% block content %}
 
 <div class="comment" id="comment">
-  <div class="post-heading">
-    <div class="post-title">
-      Title: {{comment.subject}}
-    </div>
-    <div class="post-author">
-      Author: {{comment.author_name}}
-    </div>
-    <div class="post-date">
-      Created: {{comment.created.strftime("%b %d, %Y %H:%M.%S")}}
-    </div>
-    {% if not comment.created.strftime("%b %d, %Y %H:%M.%S") == comment.modified.strftime("%b %d, %Y %H:%M.%S") %}
-      <div class="modified-date">
-        Modifield: {{comment.modified.strftime("%b %d, %Y %H:%M.%S")}}
-      </div>
-    {% endif %}
-  </div>
-  <div class="post-content">
-    {{comment._render_text | safe}}
-  </div>
-  {% if comment.author_id == login_id %}
-    <form action="" method="post" id="EditCommentForm">
-      <fieldset class="accountAction">
-        <input type="hidden" name="edit_comment_id" value="{{comment.key().id()}}">
-        <input type="submit" class="btn btn-primary" name="submit" value="Edit Comment">
-      </fieldset>
-    </form>
-  {% endif %}
+	<div class="post-heading">
+		<div class="post-title">
+			Title: {{comment.subject}}
+		</div>
+		<div class="post-author">
+			Author: {{comment.author_name}}
+		</div>
+		<div class="post-date">
+			Created: {{comment.created.strftime("%b %d, %Y %H:%M.%S")}}
+		</div>
+		{% if not comment.created.strftime("%b %d, %Y %H:%M.%S") == comment.modified.strftime("%b %d, %Y %H:%M.%S") %}
+			<div class="modified-date">
+				Modifield: {{comment.modified.strftime("%b %d, %Y %H:%M.%S")}}
+			</div>
+		{% endif %}
+	</div>
+	<div class="post-content">
+		{{comment._render_text | safe}}
+	</div>
+	{% if comment.author_id == login_id %}
+		<form action="" method="post" id="EditCommentForm">
+			<fieldset class="accountAction">
+				<input type="hidden" name="edit_comment_id" value="{{comment.key().id()}}">
+				<input type="submit" class="btn btn-primary" name="submit" value="Edit Comment">
+			</fieldset>
+		</form>
+	{% endif %}
 </div>
 {% endblock content %}

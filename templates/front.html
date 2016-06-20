@@ -10,7 +10,7 @@ to backend course in preparation for the multi-user blog project -->
 <!-- for each post in the posts table it calls render_post from the post class in main.py -->
   <h3>Recent posts.</h3>
   {% for post in posts %}
-    {{ post.render_post(login_id, likes) | safe }}
+    {{ post.render_post(login_id, post.key().id()) | safe }}
     <br><br>
   {% endfor %}
 

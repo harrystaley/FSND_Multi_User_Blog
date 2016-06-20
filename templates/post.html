@@ -11,51 +11,51 @@ extend base.html -->
 {% block content %}
 
 <div class="post">
-  <div class="post-heading">
-    <div class="post-title">
-      <a href="/post-{{post.key().id()}}">Title: {{post.subject}}</a>
-    </div>
-    <div class="post-author">
-      Author: {{post.author_name}}
-    </div>
-    <div class="post-date">
-      Created: {{post.created.strftime("%b %d, %Y %H:%M.%S")}}
-    </div>
-    {% if not post.created.strftime("%b %d, %Y %H:%M.%S") == post.modified.strftime("%b %d, %Y %H:%M.%S") %}
-      <div class="modified-date">
-        Modifield: {{post.modified.strftime("%b %d, %Y %H:%M.%S")}}
-      </div>
-    {% endif %}
-  </div>
-  <div class="post-content">
-    {{post._render_text | safe}}
-  </div>
-  <div>
-  Likes: {{likes}}
-  </div>
-  <div class="form-controls">
-    {% if post.author_id == login_id %}
-      <form action="" method="post" id="EditPostForm" class="form-controls">
-        <input type="hidden" name="edit_post_id" value="{{post.key().id()}}">
-        <input type="submit" class="btn btn-primary" name="submit" value="Edit Post">
-      </form>
-    {% endif %}
-    {% if login_id %}
-      <form action="" method="post" id="AddCommentForm" class="form-controls">
-        <input type="hidden" name="comment_post_id" value="{{post.key().id()}}">
-        <input type="submit" class="btn btn-primary" name="submit" value="Add Comment">
-      </form>
-    {% endif %}
-    {% if not post.post_like_dup(login_id) and login_id and post.author_id != login_id %}
-      <form action="" method="post" id="AddLikeForm" class="form-controls">
-        <input type="hidden" name="like_post_id" value="{{post.key().id()}}">
-        <input type="submit" class="btn btn-primary" name="submit" value="Like">
-      </form>
-    {% else %}
-      <form action="" method="post" id="AddLikeForm" class="form-controls">
-        <input type="submit" class="btn btn-primary disabled" name="submit" value="Like" disabled>
-      </form>
-    {% endif %}
-  </div>
+	<div class="post-heading">
+		<div class="post-title">
+			<a href="/post-{{post.key().id()}}">Title: {{post.subject}}</a>
+		</div>
+		<div class="post-author">
+			Author: {{post.author_name}}
+		</div>
+		<div class="post-date">
+			Created: {{post.created.strftime("%b %d, %Y %H:%M.%S")}}
+		</div>
+		{% if not post.created.strftime("%b %d, %Y %H:%M.%S") == post.modified.strftime("%b %d, %Y %H:%M.%S") %}
+			<div class="modified-date">
+				Modifield: {{post.modified.strftime("%b %d, %Y %H:%M.%S")}}
+			</div>
+		{% endif %}
+	</div>
+	<div class="post-content">
+		{{post._render_text | safe}}
+	</div>
+	<div>
+	Likes: {{likes}}
+	</div>
+	<div class="form-controls">
+		{% if post.author_id == login_id %}
+			<form action="" method="post" id="EditPostForm" class="form-controls">
+				<input type="hidden" name="edit_post_id" value="{{post.key().id()}}">
+				<input type="submit" class="btn btn-primary" name="submit" value="Edit Post">
+			</form>
+		{% endif %}
+		{% if login_id %}
+			<form action="" method="post" id="AddCommentForm" class="form-controls">
+				<input type="hidden" name="comment_post_id" value="{{post.key().id()}}">
+				<input type="submit" class="btn btn-primary" name="submit" value="Add Comment">
+			</form>
+		{% endif %}
+		{% if not post.post_like_dup(login_id, post.key().id()) and login_id and not post.author_id == login_id %}
+			<form action="" method="post" id="AddLikeForm" class="form-controls">
+				<input type="hidden" name="like_post_id" value="{{post.key().id()}}">
+				<input type="submit" class="btn btn-primary" name="submit" value="Like">
+			</form>
+		{% else %}
+			<form action="" method="post" id="AddLikeForm" class="form-controls">
+				<input type="submit" class="btn btn-primary disabled" name="submit" value="Like" disabled>
+			</form>
+		{% endif %}
+	</div>
 </div>
 {% endblock content %}

@@ -65,11 +65,12 @@ def render_str(template, **params):
     return tmp.render(params)
 
 
-def like_dup(ent, login_id):
+def like_dup(ent, login_id, post_id):
+    key = post_key(post_id)
     like_exists = db.GqlQuery("SELECT * "
                               "FROM " + ent +
-                              " WHERE like_user_id = '" +
-                              login_id + "'").get()
+                              " WHERE like_user_id = '" + login_id +
+                              "' AND ANCESTOR IS :1", key).get()
     return like_exists
 
 
@@ -209,17 +210,31 @@ class Post(db.Model):
     created = db.DateTimeProperty(auto_now_add=True)
     modified = db.DateTimeProperty(auto_now=True)
 
-    def render_post(self, login_id, likes):
+    def post_likes(self, post_id):
+        # gets the metadata about the datastor
+        kinds = metadata.get_kinds()
+        # checks to see if any likes exist and if so displays them
+        if u'PostLike' in kinds:
+            likes = db.GqlQuery("SELECT * "
+                                "FROM PostLike "
+                                "WHERE ANCESTOR IS :1",
+                                post_key(post_id)).count()
+        else:
+            likes = 0
+        return likes
+
+    def render_post(self, login_id, post_id):
         """
         Renders the blog post replacing cariage returns in the text with
         html so that it displays correctly in the borowser.
         """
+        likes = self.post_likes(post_id)
         self._render_text = self.content.replace('\n', '<br>')
         return render_str("post.html", login_id=login_id,
                           likes=likes, post=self)
 
-    def post_like_dup(self, login_id):
-        exists = like_dup('PostLike', login_id)
+    def post_like_dup(self, login_id, post_id):
+        exists = like_dup('PostLike', login_id, post_id)
         return exists
 
 
@@ -290,7 +305,7 @@ class MainPage(TemplateHandler):
             post_id = like_post_id
             user_id = self.read_secure_cookie('usercookie')
             if self.read_secure_cookie('usercookie'):
-                if not like_dup('PostLike', user_id):
+                if not like_dup('PostLike', user_id, post_id):
                     post_id = like_post_id
                     user_id = self.read_secure_cookie('usercookie')
                     like = PostLike(like_user_id=user_id,
@@ -404,15 +419,8 @@ class PostLinkHandler(TemplateHandler, EncryptHandler):
         post_id = url_str.rsplit('post-', 1)[1]
         key = post_key(post_id)
         post = db.get(key)
-        # gets the metadata about the datastor
+
         kinds = metadata.get_kinds()
-        # checks to see if any likes exist and if so displays them
-        if u'PostLike' in kinds:
-            likes = db.GqlQuery("SELECT * "
-                                "FROM PostLike "
-                                "WHERE ANCESTOR IS :1", key).count()
-        else:
-            likes = 0
         # checks to see if any comments exist and if so displays them
         if u'Comment' in kinds:
             comments = db.GqlQuery("SELECT * "
@@ -421,7 +429,7 @@ class PostLinkHandler(TemplateHandler, EncryptHandler):
         else:
             comments = ''
         self.render("postlink.html", post=post,
-                    comments=comments, likes=likes)
+                    comments=comments)
 
     def post(self, login_id):
         edit_post_id = self.request.get('edit_post_id')
@@ -444,7 +452,7 @@ class PostLinkHandler(TemplateHandler, EncryptHandler):
             post_id = like_post_id
             user_id = self.read_secure_cookie('usercookie')
             if self.read_secure_cookie('usercookie'):
-                if not like_dup('PostLike', user_id):
+                if not like_dup('PostLike', user_id, post_id):
                     post_id = like_post_id
                     user_id = self.read_secure_cookie('usercookie')
                     like = PostLike(like_user_id=user_id,

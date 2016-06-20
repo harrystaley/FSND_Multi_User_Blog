@@ -11,3 +11,7 @@ Once you are all set up you are welcome to fork my code and set up your very own
 
 
 More features and enhancement are forthcoming so stay tuned for more.
+
+To get to the public view of my site just visit:
+
+http://multi-user-blog-1321.appspot.com/
