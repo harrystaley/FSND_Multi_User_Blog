@@ -661,8 +661,10 @@ class UserLoginHandler(TemplateHandler, AuthHandler):
             if self.user_auth(username, password):
                 auth_error = False
             else:
+                auth_error = True
                 params['error_password'] = 'Invalid Password'
         else:
+            auth_error = True
             params['error_username'] = 'User Does Not Exist'
 
         # if there is an error re-render signup page
