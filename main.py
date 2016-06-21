@@ -320,9 +320,13 @@ class MainPage(TemplateHandler, AuthHandler):
         auth_error = True
         if self.read_secure_cookie('usercookie'):
             auth_error = False
+        else:
+            auth_error = True
         username = self.read_secure_cookie('usercookie')
         if not self.user_exists(username):
             auth_error = False
+        else:
+            auth_error = True
 
         if not auth_error:
             edit_post_id = self.request.get('edit_post_id')
@@ -365,9 +369,13 @@ class NewPostHandler(TemplateHandler, AuthHandler):
         auth_error = True
         if self.read_secure_cookie('usercookie'):
             auth_error = False
+        else:
+            auth_error = True
         username = self.read_secure_cookie('usercookie')
         if not self.user_exists(username):
             auth_error = False
+        else:
+            auth_error = True
 
         if not auth_error:
             subject_input = self.request.get('subject')
@@ -421,9 +429,13 @@ class NewCommentHandler(TemplateHandler, AuthHandler):
         auth_error = True
         if self.read_secure_cookie('usercookie'):
             auth_error = False
+        else:
+            auth_error = True
         username = self.read_secure_cookie('usercookie')
         if not self.user_exists(username):
             auth_error = False
+        else:
+            auth_error = True
 
         if not auth_error:
             post_id = self.request.get('post_id')
@@ -487,9 +499,13 @@ class PostLinkHandler(TemplateHandler, AuthHandler):
         auth_error = True
         if self.read_secure_cookie('usercookie'):
             auth_error = False
+        else:
+            auth_error = True
         username = self.read_secure_cookie('usercookie')
         if not self.user_exists(username):
             auth_error = False
+        else:
+            auth_error = True
 
         if not auth_error:
             edit_post_id = self.request.get('edit_post_id')
@@ -542,9 +558,13 @@ class CommentLinkHandler(TemplateHandler, AuthHandler):
         auth_error = True
         if self.read_secure_cookie('usercookie'):
             auth_error = False
+        else:
+            auth_error = True
         username = self.read_secure_cookie('usercookie')
         if not self.user_exists(username):
             auth_error = False
+        else:
+            auth_error = True
 
         if not auth_error:
             comment_id = self.request.get('edit_comment_id')
@@ -751,9 +771,13 @@ class EditPost(TemplateHandler, AuthHandler):
         auth_error = True
         if self.read_secure_cookie('usercookie'):
             auth_error = False
+        else:
+            auth_error = True
         username = self.read_secure_cookie('usercookie')
         if not self.user_exists(username):
             auth_error = False
+        else:
+            auth_error = True
 
         if not auth_error:
             post_id = self.request.get('post_id')
@@ -823,9 +847,13 @@ class EditComment(TemplateHandler, AuthHandler):
         auth_error = True
         if self.read_secure_cookie('usercookie'):
             auth_error = False
+        else:
+            auth_error = True
         username = self.read_secure_cookie('usercookie')
         if not self.user_exists(username):
             auth_error = False
+        else:
+            auth_error = True
 
         if not auth_error:
             post_id = self.request.get('post_id')
@@ -864,9 +892,13 @@ class DeletePost(TemplateHandler, AuthHandler):
         auth_error = True
         if self.read_secure_cookie('usercookie'):
             auth_error = False
+        else:
+            auth_error = True
         username = self.read_secure_cookie('usercookie')
         if not self.user_exists(username):
             auth_error = False
+        else:
+            auth_error = True
 
         if not auth_error:
             post_id = self.request.get('post_id')
@@ -888,9 +920,13 @@ class DeleteComment(TemplateHandler, AuthHandler):
         auth_error = True
         if self.read_secure_cookie('usercookie'):
             auth_error = False
+        else:
+            auth_error = True
         username = self.read_secure_cookie('usercookie')
         if not self.user_exists(username):
             auth_error = False
+        else:
+            auth_error = True
 
         if not auth_error:
             comment_id = self.request.get('comment_id')
