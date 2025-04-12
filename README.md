@@ -1,75 +1,54 @@
-# Udacity Full Stack Web Developer Nanodeegree
-## Project: Multi_User_Blog
+# FSND_Multi_User_Blog
 
-This is a web site that has the purpose of being a muulti user blog.
+## Project Overview
 
-## PROJECT SPECIFICATIONS
-as of July 2016
+FSND_Multi_User_Blog is a multi-user blogging platform developed as a part of the Udacity Full Stack Web Developer Nanodegree. It is a comprehensive application that showcases core web development skills. The application is deployed using Google App Engine and is open to the public for learning and exploration. The project covers a wide range of topics including but not limited to nanodegree, blog, and Udacity.
 
-Code Functionality
+## Setup and Installation
 
-| CRITERIA                                     | MEETS SPECIFICATIONS                      |
-|----------------------------------------------|-------------------------------------------|
-| What framework is used?                      | App is built using Google App Engine      |
-| Blog is deployed and viewable to the public. | The submitted URL is publicly accessible. |
+To set up and run this project locally, follow the instructions below:
 
-Site Usability
+1. Clone this repository to your local machine:
 
-| CRITERIA                                                             | MEETS SPECIFICATIONS                                                                                                                                                                    |
-|----------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| The signup, login, and logout workflow is intuitive to a human user. | User is directed to login, logout, and signup pages as appropriate. E.g., login page should have a link to signup page and vice-versa; logout page is only available to logged in user. |
-| Editing and viewing workflow is intuitive to a human user.           | Links to edit blog pages are available to users. Users editing a page can click on a link to cancel the edit and go back to viewing that page.                                          |
-| Pages render correctly.                                              | Blog pages render properly. Templates are used to unify the site.                                                                                                                       |
+   ```bash
+   git clone https://github.com/username/FSND_Multi_User_Blog.git
+   ```
 
-Accounts and Security
+2. Navigate to the project directory:
 
-| CRITERIA                                     | MEETS SPECIFICATIONS                                                                                        |
-|----------------------------------------------|-------------------------------------------------------------------------------------------------------------|
-| User accounts are appropriately handled.     | Users are able to create accounts, login, and logout correctly.                                             |
-| Account information is properly retained.    | Existing users can revisit the site and log back in without having to recreate their accounts each time.    |
-| Usernames are unique.                        | Usernames are unique. Attempting to create a duplicate user results in an error message.                    |
-| Passwords are secure and appropriately used. | Stored passwords are hashed. Passwords are appropriately checked during login. User cookie is set securely. |
+   ```bash
+   cd FSND_Multi_User_Blog
+   ```
 
-Permissions
+3. Install the required dependencies:
 
-| CRITERIA | MEETS SPECIFICATIONS |
-|------------------|--------------|
-| User permissions are appropriate for logged out users. | Logged out users are redirected to the login page when attempting to create, edit, delete, or like a blog post. |
-| User permissions are appropriate for logged in users. | Logged in users can create, edit, or delete blog posts they themselves have created.
- Users should only be able to like posts once and should not be able to like their own post. |
-| Comment permissions are enforced. |
-| Only signed in users can post comments.
-Users can only edit and delete comments they themselves have made. |
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-Code Quality
+4. Run the application:
 
-| CRITERIA | MEETS SPECIFICATIONS |
-|----------|----------------------|
-| Code should be readable per the Google Python Style Guide. | Code follows the Google Python Style Guide. |
-| Code is well structured. | Code follows an intuitive, easy-to-follow logical structure. |
-| Code is well commented. | Code that is not intuitively readable is well-documented with comments. |
+   ```bash
+   python main.py
+   ```
 
-Documentation
+Please note, you will need Python installed on your system to run this application. This project is developed using Python 3.8.
 
-| CRITERIA | MEETS SPECIFICATIONS |
-|----------|------------------------|
-| Are steps for running the project provided in a README file? | Instructions on how to run the project are outlined in a README file. |
+## Usage
 
+After successfully running the application, visit `http://localhost:8080` on your web browser. You will be greeted with a login page. You can create a new account or login if you already have one. Once logged in, you can create new blog posts, view others' posts, and comment on or like them.
 
-## HOW TO RUN THIS PROJECT
-This site uses google app engine to serve the content of the site and all of hte content on it.
+## Contributing
 
-To install the google app engine SDK go to https://cloud.google.com/appengine/downloads#null .
+Contributions to this project are always welcome. Whether it's improving the code quality, adding features, or reporting bugs, your help is greatly appreciated. Here are the steps to contribute to this project:
 
-Once installed sign up for a google app engine acount by following the instructions located at https://sites.google.com/site/gdevelopercodelabs/app-engine/creating-your-app-engine-account
+1. Fork the repository.
+2. Create a new branch in your forked repository.
+3. Make your changes.
+4. Submit a pull request with a description of your changes.
 
-Once you are all set up you are welcome to fork my code and set up your very own multi user blog.
+Please make sure your code follows the existing style to keep it readable.
 
+## License
 
-More features and enhancement are forthcoming so stay tuned for more.
-
-I plan on implementing bcrypt as well as updating the UI to include more styling as well as likes for comments as well.
-
-To get to the public view of my site just visit:
-
-http://multi-user-blog-1321.appspot.com/
+This project is licensed under the MIT License. For more information, please refer to the [LICENSE](LICENSE) file in this repository.
