@@ -2,53 +2,75 @@
 
 ## Project Overview
 
-FSND_Multi_User_Blog is a multi-user blogging platform developed as a part of the Udacity Full Stack Web Developer Nanodegree. It is a comprehensive application that showcases core web development skills. The application is deployed using Google App Engine and is open to the public for learning and exploration. The project covers a wide range of topics including but not limited to nanodegree, blog, and Udacity.
+The FSND_Multi_User_Blog is a multi-user blog application developed as a part of the Udacity Full Stack Web Developer Nanodegree. This application allows multiple users to create, edit, and manage their blog posts. It is built using Python and utilizes Google App Engine for deployment, showcasing essential web development skills.
+
+### Structure
+
+The project is structured as follows:
+
+- `app.yaml`: Configuration file for Google App Engine.
+- `main.py`: The main Python script that handles routing and controllers.
+- `models/`: Directory containing ORM models for the datastore entities.
+- `templates/`: Folder for HTML templates for rendering views.
+- `static/`: Contains static files like CSS and JavaScript.
+- `utils/`: Utility functions and helpers.
 
 ## Setup and Installation
 
-To set up and run this project locally, follow the instructions below:
+### Prerequisites
 
-1. Clone this repository to your local machine:
+- Python 2.7
+- Google Cloud SDK
+- A Google Cloud Platform account
 
+### Installation Steps
+
+1. **Clone the Repository:**
    ```bash
-   git clone https://github.com/username/FSND_Multi_User_Blog.git
-   ```
-
-2. Navigate to the project directory:
-
-   ```bash
+   git clone https://github.com/yourusername/FSND_Multi_User_Blog.git
    cd FSND_Multi_User_Blog
    ```
 
-3. Install the required dependencies:
+2. **Install Google Cloud SDK:**
+   Follow the instructions at https://cloud.google.com/sdk/docs/install to install and initialize the Google Cloud SDK.
 
+3. **Run the Application Locally:**
    ```bash
-   pip install -r requirements.txt
+   dev_appserver.py app.yaml
    ```
+   This command will start the app on your local server, usually accessible at `http://localhost:8080`.
 
-4. Run the application:
-
+4. **Deploy to Google App Engine:**
+   Once you are ready to deploy the application, you can use the following command:
    ```bash
-   python main.py
+   gcloud app deploy
    ```
-
-Please note, you will need Python installed on your system to run this application. This project is developed using Python 3.8.
+   Follow the prompts to select your project and deploy the application.
 
 ## Usage
 
-After successfully running the application, visit `http://localhost:8080` on your web browser. You will be greeted with a login page. You can create a new account or login if you already have one. Once logged in, you can create new blog posts, view others' posts, and comment on or like them.
+After deploying the application or running it locally, you can access it through your web browser.
+
+- **Home Page:** Shows all the blog posts.
+- **Signup:** New users can create an account.
+- **Login:** Existing users can log in.
+- **Create Post:** Logged-in users can create new blog posts.
+- **Edit/Delete Post:** Post owners can edit or delete their posts.
 
 ## Contributing
 
-Contributions to this project are always welcome. Whether it's improving the code quality, adding features, or reporting bugs, your help is greatly appreciated. Here are the steps to contribute to this project:
+Contributions to the FSND_Multi_User_Blog are welcome!
 
-1. Fork the repository.
-2. Create a new branch in your forked repository.
-3. Make your changes.
-4. Submit a pull request with a description of your changes.
+1. **Fork the Repository:** Start by forking the repository to your GitHub account.
+2. **Clone the Forked Repository:** Clone the repository to your local machine.
+3. **Create a New Branch:** Create a branch for your changes and switch to it.
+4. **Make Changes:** Implement your changes or improvements.
+5. **Commit Changes:** Commit your changes with a clear commit message.
+6. **Push to GitHub:** Push your changes to your fork on GitHub.
+7. **Submit a Pull Request:** Open a pull request from your fork to the original repository.
 
-Please make sure your code follows the existing style to keep it readable.
+Please ensure your code adheres to the existing style so that your changes can be easily integrated.
 
 ## License
 
-This project is licensed under the MIT License. For more information, please refer to the [LICENSE](LICENSE) file in this repository.
+This project is open-sourced under the MIT License. See the LICENSE file for more details.
